@@ -9,6 +9,7 @@ import '../utils/custom_page_route.dart';
 
 class MenuScreen extends StatelessWidget {
   final String userName;
+
   static const String routeName = "/menu";
   const MenuScreen({super.key, required this.userName});
 

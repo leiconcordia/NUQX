@@ -118,7 +118,7 @@ class ConfirmationTicketScreen extends StatelessWidget {
                   initialConcern: concern,
                 ),
               ),
-              (route) => false,
+                  (route) => false,
             );
           },
           child: Text("Edit", style: TextStyle(fontSize: 16.sp)),
@@ -129,7 +129,7 @@ class ConfirmationTicketScreen extends StatelessWidget {
             Navigator.pushAndRemoveUntil(
               context,
               noAnimationRoute(TrackerScreen(userName: userName)),
-              (route) => false,
+                  (route) => false,
             );
           },
           style: ElevatedButton.styleFrom(

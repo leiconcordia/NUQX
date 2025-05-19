@@ -3,6 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/custom_footer.dart';
 import '../widgets/custom_header.dart';
 import 'login_screen.dart';
+import 'package:bcrypt/bcrypt.dart';
+
+import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -12,10 +15,28 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+
+  final TextEditingController _studentIDController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _studentIDController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
   bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
+
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -44,15 +65,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       SizedBox(height: 30.h),
                       _buildLabel("Student ID*"),
-                      _buildTextField(),
+                      _buildTextField(controller: _studentIDController),
                       _buildLabel("First Name*"),
-                      _buildTextField(),
-                       _buildLabel("Last Name*"),
-                       _buildTextField(),
+                      _buildTextField(controller: _firstNameController ),
+                      _buildLabel("Last Name*"),
+                      _buildTextField(controller: _lastNameController),
                       _buildLabel("Email*"),
-                      _buildTextField(),
+                      _buildTextField(controller: _emailController),
                       _buildLabel("Password*"),
-                      _buildPasswordField(),
+                      _buildPasswordField(controller: _passwordController),
                       SizedBox(height: 20.h),
                       SizedBox(
                         width: double.infinity,
@@ -64,7 +85,105 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               borderRadius: BorderRadius.circular(24.r),
                             ),
                           ),
-                          onPressed: () {},
+                          onPressed: () async {
+                            String studentID = _studentIDController.text.trim();
+                            String firstName = _firstNameController.text.trim();
+                            String lastName = _lastNameController.text.trim();
+                            String email = _emailController.text.trim();
+                            String password = _passwordController.text.trim();
+
+                            if (studentID.isEmpty || firstName.isEmpty || lastName.isEmpty || email.isEmpty || password.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Please fill in all required fields")),
+                              );
+                              return;
+                            }
+                            // Basic validations
+                            if (studentID.isEmpty || firstName.isEmpty || lastName.isEmpty || email.isEmpty || password.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("❌ Please fill in all required fields")),
+                              );
+                              return;
+                            }
+                            // Validate Student ID: must be exactly 11 digits
+                            if (!RegExp(r'^\d{11}$').hasMatch(studentID)) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("❌ Student ID must be 11 digits")),
+                              );
+                              return;
+                            }
+
+                            // Validate Email: must be a valid gmail address
+                            if (!email.endsWith("@gmail.com")) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("❌ Email must be a valid @gmail.com address")),
+                              );
+                              return;
+                            }
+
+                            // Validate Password: minimum 8 characters
+                            if (password.length < 8) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("❌ Password must be at least 8 characters long")),
+                              );
+                              return;
+                            }
+
+                            // ✅ Check if user with same email exists
+                            var existingUser = await MongoDatabase.getUserByEmail(email);
+                            if (existingUser != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Email already in use")),
+                              );
+                              return;
+                            }
+
+                            // ✅ Optional: also check for duplicate Student ID
+                            var existingStudent = await MongoDatabase.getUserByStudentID(studentID);
+                            if (existingStudent != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Student ID already in use")),
+                              );
+                              return;
+                            }
+
+                            // ✅ Proceed with account creation
+                            final hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
+                            Map<String, dynamic> newUser = {
+                              "studentID": studentID,
+                              "firstName": firstName,
+                              "lastName": lastName,
+                              "email": email,
+                              "password": hashedPassword,
+                              "role": "student",
+                              "createdAt": DateTime.now().toIso8601String(),
+                            };
+
+                            await MongoDatabase.insertUser(newUser);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Account created")),
+                            );
+
+                            // Optionally navigate or clear fields
+                            // Redirect to login screen after a short delay (optional for UX)
+                            await Future.delayed(Duration(seconds: 1));
+
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => LoginScreen()),
+                            );
+                            _studentIDController.clear();
+                            _firstNameController.clear();
+                            _lastNameController.clear();
+                            _emailController.clear();
+                            _passwordController.clear();
+
+                          },
+
+
+
                           child: Text(
                             "Sign up",
                             style: TextStyle(
@@ -143,10 +262,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildTextField() {
+  Widget _buildTextField({required TextEditingController controller}) {
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
       child: TextField(
+       controller: controller,
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
@@ -163,10 +283,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildPasswordField() {
+  Widget _buildPasswordField({required TextEditingController controller}) {
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
       child: TextField(
+        controller: controller,
         obscureText: _obscurePassword,
         decoration: InputDecoration(
           filled: true,

@@ -9,6 +9,7 @@ class TrackerScreen extends StatelessWidget {
   static const String routeName = "/tracker";
   final String userName;
 
+
   const TrackerScreen({super.key, required this.userName});
 
   @override

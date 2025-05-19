@@ -62,15 +62,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
 
-
-                          // onPressed: () {
-                          //   String userName = _emailController.text;
-                          //   _navigateToScreen(
-                          //     context,
-                          //     VerifiedPage(userName: userName),
-                          //   );
-                          // },
-
                           onPressed: () async {
                             String email = _emailController.text.trim();
                             String password = _passwordController.text;
@@ -86,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
 
                             // 2. Check role
-                            if (user['role'] != 'kiosk') {
+                            if (user['role'] != 'student') {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text("You are not authorized to log in.")),
                               );
@@ -98,7 +89,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             if (passwordMatch) {
                               // 4. Login successful — go to next screen
-                              _navigateToScreen(context, VerifiedPage(userName: user['email']));
+                              _navigateToScreen(
+                                context,
+                                VerifiedPage(
+                                  userName: user['email'],      // Make sure keys match MongoDB field names
+                                  // Convert ObjectId to String
+                                ),
+                              );
+
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text("Incorrect password")),

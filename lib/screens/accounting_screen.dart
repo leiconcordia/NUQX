@@ -8,7 +8,6 @@ import 'paymentform_screen.dart';
 
 class AccountingScreen extends StatelessWidget {
   final String userName;
-
   const AccountingScreen({super.key, required this.userName});
 
   @override

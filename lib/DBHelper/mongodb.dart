@@ -18,7 +18,7 @@ class MongoDatabase {
       print("❌ Error connecting to MongoDB: $e");
     }
   }
-
+//signin
   static Future<Map<String, dynamic>?> getUserByEmail(String email) async {
     try {
       final user = await userCollection.findOne({'email': email});
@@ -32,6 +32,33 @@ class MongoDatabase {
       print("❌ Error fetching user: $e");
       return null;
     }
+
+
   }
+
+//Signup
+  static Future<void> insertUser(Map<String, dynamic> userData) async {
+    try {
+      await userCollection.insertOne(userData);
+      print("✅ User inserted successfully");
+    } catch (e) {
+      print("❌ Failed to insert user: $e");
+    }
+  }
+
+//ID VALIDATION DURING SIGNUP
+  static Future<dynamic> getUserByStudentID(String studentID) async {
+    final user = await userCollection.findOne({"studentID": studentID});
+    return user;
+  }
+//FOR VALIDATION
+  static Future<dynamic> getUserById(String id) async {
+    final user = await userCollection.findOne({"_id": ObjectId.parse(id)});
+    return user;
+  }
+
+
+
+
 
 }

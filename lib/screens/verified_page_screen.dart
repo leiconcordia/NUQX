@@ -6,7 +6,8 @@ import '../utils/custom_page_route.dart';
 import 'home_screen.dart'; // Ensure this import path is correct
 
 class VerifiedPage extends StatelessWidget {
-  final String userName; // ✅ Fixed userName as a class property
+  final String userName;
+
 
   const VerifiedPage({super.key, required this.userName});
 

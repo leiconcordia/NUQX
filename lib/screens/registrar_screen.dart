@@ -10,6 +10,7 @@ import 'home_screen.dart';
 class RegistrarScreen extends StatelessWidget {
   final String userName;
 
+
   const RegistrarScreen({super.key, required this.userName});
 
   @override

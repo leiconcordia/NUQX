@@ -7,6 +7,7 @@ import '../utils/custom_page_route.dart';
 
 class InquiryScreen extends StatelessWidget {
   final String userName;
+
   const InquiryScreen({super.key, required this.userName});
 
   @override
