@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/custom_footer_with_nav.dart';
 import '../widgets/custom_header_with_logo.dart';
@@ -7,21 +8,49 @@ import 'accounting_screen.dart';
 import 'registrar_screen.dart';
 import 'other_concern_form_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  static const String routeName = "/home"; // Define route name
-  final String userName;
-
+class HomeScreen extends StatefulWidget {
+  static const String routeName = "/home";
+  final String userName; // This is actually the email
 
   const HomeScreen({super.key, required this.userName});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  Map<String, dynamic>? user;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  Future<void> fetchUserData() async {
+    // 'userName' is the email in this context
+    final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
+    if (fetchedUser != null) {
+      setState(() {
+        user = fetchedUser;
+      });
+    }
+  }
+
+
+  @override
   Widget build(BuildContext context) {
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.white, // Ensure white background
       body: SafeArea(
         child: Column(
           children: [
-            CustomHeaderWithLogo(userName: userName),
+            CustomHeaderWithLogo(userName: user!['firstName']),
 
             Expanded(
               child: SingleChildScrollView(
@@ -35,7 +64,7 @@ class HomeScreen extends StatelessWidget {
 
                       // Bigger and blue text
                       Text(
-                        "Hi, $userName!",
+                        "Hi, ${user!['firstName']}!",
                         style: TextStyle(
                           fontSize: 40.sp, // Increased size
                           fontWeight: FontWeight.w600,
@@ -70,7 +99,7 @@ class HomeScreen extends StatelessWidget {
                             onTap:
                                 () => _navigateToScreen(
                                   context,
-                                  AdmissionScreen(userName: userName),
+                                  AdmissionScreen(userName: widget.userName),
                                 ),
                           ),
                           _buildCategoryTile(
@@ -79,7 +108,7 @@ class HomeScreen extends StatelessWidget {
                             onTap:
                                 () => _navigateToScreen(
                                   context,
-                                  AccountingScreen(userName: userName),
+                                  AccountingScreen(userName: widget.userName),
                                 ),
                           ),
                           _buildCategoryTile(
@@ -88,7 +117,7 @@ class HomeScreen extends StatelessWidget {
                             onTap:
                                 () => _navigateToScreen(
                                   context,
-                                  RegistrarScreen(userName: userName),
+                                  RegistrarScreen(userName: widget.userName),
                                 ),
                           ),
                           _buildCategoryTile(
@@ -97,7 +126,7 @@ class HomeScreen extends StatelessWidget {
                             onTap:
                                 () => _navigateToScreen(
                                   context,
-                                  OtherConcernFormScreen(userName: userName),
+                                  OtherConcernFormScreen(userName: widget.userName),
                                 ),
                           ),
                         ],
@@ -111,7 +140,7 @@ class HomeScreen extends StatelessWidget {
             ),
 
             CustomFooterWithNav(
-              userName: userName,
+              userName: widget.userName,
               activeTab: 'home', // Tell footer you're on Form tab
             ),
           ],

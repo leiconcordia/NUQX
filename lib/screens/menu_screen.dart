@@ -6,15 +6,45 @@ import '../widgets/custom_footer_with_nav.dart'; // Updated footer with navigati
 import 'editprofile_screen.dart';
 import 'location_screen.dart';
 import '../utils/custom_page_route.dart';
+import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
-class MenuScreen extends StatelessWidget {
+class MenuScreen extends StatefulWidget {
   final String userName;
 
   static const String routeName = "/menu";
   const MenuScreen({super.key, required this.userName});
 
   @override
+  State<MenuScreen> createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
+  Map<String, dynamic>? user;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  Future<void> fetchUserData() async {
+    // 'userName' is the email in this context
+    final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
+    if (fetchedUser != null) {
+      setState(() {
+        user = fetchedUser;
+      });
+    }
+  }
+
+  @override
+  @override
   Widget build(BuildContext context) {
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -31,7 +61,7 @@ class MenuScreen extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        noAnimationRoute(HomeScreen(userName: userName)),
+                        noAnimationRoute(HomeScreen(userName: widget.userName)),
                         (route) => false,
                       );
                     },
@@ -57,7 +87,7 @@ class MenuScreen extends StatelessWidget {
 
                     // Name
                     Text(
-                      'Maureen Jae Cruzada',
+                      '${user!['firstName']} ${user!['lastName']}',
                       style: TextStyle(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.bold,
@@ -88,7 +118,7 @@ class MenuScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ProfileEditScreen(),
+                          builder: (context) => ProfileEditScreen(userName : widget.userName),
                         ),
                       );
                     }),
@@ -103,7 +133,7 @@ class MenuScreen extends StatelessWidget {
             ),
 
             // Footer with Navigation
-            CustomFooterWithNav(userName: userName, activeTab: 'menu'),
+            CustomFooterWithNav(userName: widget.userName, activeTab: 'menu'),
           ],
         ),
       ),

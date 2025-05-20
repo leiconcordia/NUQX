@@ -1,33 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'menu_screen.dart'; // Import MenuScreen
+import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
 class ProfileEditScreen extends StatefulWidget {
-  const ProfileEditScreen({super.key});
+  final String userName;
+  const ProfileEditScreen({super.key, required this.userName});
+
 
   @override
   _ProfileEditScreenState createState() => _ProfileEditScreenState();
+
 }
 
 class _ProfileEditScreenState extends State<ProfileEditScreen> {
-  final TextEditingController studentIdController = TextEditingController(
-    text: "2023-109905",
-  );
-  final TextEditingController emailController = TextEditingController(
-    text: "mcruzada@student.nu",
-  );
-  final TextEditingController firstNameController = TextEditingController(
-    text: "Maureen Joe",
-  );
-  final TextEditingController lastNameController = TextEditingController(
-    text: "Cruzada",
-  );
-  final TextEditingController middleNameController = TextEditingController();
 
-  var userName;
+  Map<String, dynamic>? user;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  Future<void> fetchUserData() async {
+    final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
+    if (fetchedUser != null) {
+      setState(() {
+        user = fetchedUser;
+
+        // Initialize controllers with user data
+        studentIdController.text = user!['studentID'] ?? '';
+        emailController.text = user!['email'] ?? '';
+        firstNameController.text = user!['firstName'] ?? '';
+        lastNameController.text = user!['lastName'] ?? '';
+        middleNameController.text = user!['middleName'] ?? '';
+      });
+    }
+  }
+
+
+  TextEditingController studentIdController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController firstNameController = TextEditingController();
+  TextEditingController lastNameController = TextEditingController();
+  TextEditingController middleNameController = TextEditingController();
+
 
   @override
   Widget build(BuildContext context) {
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text("My Profile"),
@@ -57,7 +83,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => MenuScreen(userName: userName),
+                    builder: (context) => MenuScreen(userName: widget.userName),
                   ),
                 );
               },
