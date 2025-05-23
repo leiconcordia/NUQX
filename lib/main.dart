@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_application_1/screens/signup_screen.dart';
 import 'package:flutter_application_1/screens/login_screen.dart';
 import 'package:flutter_application_1/screens/location_screen.dart';
+import 'package:flutter_application_1/screens/home_screen.dart';
 
 import 'package:mongo_dart/mongo_dart.dart';
 import 'dart:ui' as ui;
@@ -18,6 +19,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+
   const MyApp({super.key});
 
   @override
@@ -34,11 +36,12 @@ class MyApp extends StatelessWidget {
             primaryColor: const Color(0xFF2D3A8C),
             fontFamily: 'Poppins', // Set global font to Poppins
           ),
-          initialRoute: '/signup', // Set Location Screen as the first page
+          initialRoute: '/homescreen', // Set Location Screen as the first page
           routes: {
             '/login': (context) => const LoginScreen(),
             '/signup': (context) => const SignUpScreen(),
             '/location': (context) => const LocationScreen(),
+            '/homescreen': (context) => const HomeScreen(userName: 'alexis@gmail.com'),
 
           },
         );

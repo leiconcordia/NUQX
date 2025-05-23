@@ -5,22 +5,36 @@ import '../widgets/custom_header_with_title.dart';
 import 'requestdocuments_form_screen.dart';
 import 'tracker_screen.dart';
 import '../utils/custom_page_route.dart';
+import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
-class ConfirmationTicketScreen extends StatelessWidget {
+class ConfirmationTicketScreen extends StatefulWidget {
   final String userName;
-  final String name;
-  final String studentId;
-  final String department;
-  final String concern;
+  final String transactionConcern;
 
-  const ConfirmationTicketScreen({
-    super.key,
-    required this.name,
-    required this.studentId,
-    required this.department,
-    required this.concern,
-    required this.userName,
-  });
+  const ConfirmationTicketScreen({super.key, required this.userName, required this.transactionConcern});
+  @override
+  State<ConfirmationTicketScreen> createState() => _ConfirmationTicketScreen();
+}
+
+class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
+  Map<String, dynamic>? user;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  Future<void> fetchUserData() async {
+    // 'userName' is the email in this context
+    final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
+    if (fetchedUser != null) {
+      setState(() {
+        user = fetchedUser;
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +61,7 @@ class ConfirmationTicketScreen extends StatelessWidget {
                 ),
               ),
             ),
-            CustomFooterWithNav(userName: userName, activeTab: 'home',),
+            CustomFooterWithNav(userName: widget.userName, activeTab: 'home',),
           ],
         ),
       ),
@@ -79,10 +93,10 @@ class ConfirmationTicketScreen extends StatelessWidget {
               ],
             ),
             SizedBox(height: 10.h),
-            _buildDetailText("Name", name),
-            _buildDetailText("Student ID", studentId),
-            _buildDetailText("Department", department),
-            _buildDetailText("Concern", concern),
+            _buildDetailText("Name", '${user!['firstName']} ${user!['lastName']}'),
+            _buildDetailText("Student ID", '${user!['studentID']}' ),
+            _buildDetailText("Department", '${user!['program']}' ),
+            _buildDetailText("Concern", widget.transactionConcern ),
             SizedBox(height: 20.h),
             _buildActionButtons(context),
           ],
@@ -107,28 +121,17 @@ class ConfirmationTicketScreen extends StatelessWidget {
       children: [
         TextButton(
           onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              noAnimationRoute(
-                RequestDocumentScreen(
-                  userName: userName,
-                  initialName: name,
-                  initialStudentId: studentId,
-                  initialDepartment: department,
-                  initialConcern: concern,
-                ),
-              ),
-                  (route) => false,
-            );
+            Navigator.pop(context);
           },
-          child: Text("Edit", style: TextStyle(fontSize: 16.sp)),
+          child: Text("Back", style: TextStyle(fontSize: 16.sp)),
         ),
+
         SizedBox(width: 10.w),
         ElevatedButton(
           onPressed: () {
             Navigator.pushAndRemoveUntil(
               context,
-              noAnimationRoute(TrackerScreen(userName: userName)),
+              noAnimationRoute(TrackerScreen(userName: widget.userName)),
                   (route) => false,
             );
           },

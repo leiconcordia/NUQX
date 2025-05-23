@@ -28,12 +28,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> fetchUserData() async {
-    // 'userName' is the email in this context
-    final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
-    if (fetchedUser != null) {
+    try {
+      final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
       setState(() {
         user = fetchedUser;
       });
+
+      if (fetchedUser == null) {
+        // Optional: Handle case where user wasn't found
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not found')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        user = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching user: $e')),
+      );
     }
   }
 

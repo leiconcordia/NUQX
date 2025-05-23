@@ -5,6 +5,8 @@ import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   final String userName;
+
+
   const ProfileEditScreen({super.key, required this.userName});
 
 
@@ -15,13 +17,18 @@ class ProfileEditScreen extends StatefulWidget {
 
 class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
+
+
   Map<String, dynamic>? user;
 
   @override
   void initState() {
     super.initState();
     fetchUserData();
+
   }
+
+
 
   Future<void> fetchUserData() async {
     final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
@@ -35,10 +42,18 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         firstNameController.text = user!['firstName'] ?? '';
         lastNameController.text = user!['lastName'] ?? '';
         middleNameController.text = user!['middleName'] ?? '';
+
+        // Fetch program and year level from DB if they exist
+        selectedProgram = user!['program'];
+        selectedYearLevel = user!['yearLevel'];
       });
     }
   }
+  String? selectedProgram;
+  String? selectedYearLevel;
 
+  final List<String> programOptions = ['BSIT', 'BSHM', 'BSCS', 'BSTM'];
+  final List<String> yearLevelOptions = ['1', '2', '3', '4'];
 
   TextEditingController studentIdController = TextEditingController();
   TextEditingController emailController = TextEditingController();
@@ -54,70 +69,134 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
+
     return Scaffold(
       appBar: AppBar(
         title: Text("My Profile"),
         backgroundColor: Color(0xFF2D3A8C),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 50.r,
-              backgroundImage: AssetImage(
-                'assets/profile_pic.png',
-              ), // Replace with actual image asset
-            ),
-            SizedBox(height: 16.h),
-            _buildTextField("Student ID", studentIdController, enabled: false),
-            _buildTextField("Email", emailController, enabled: false),
-            _buildTextField("First Name", firstNameController),
-            _buildTextField("Middle Name", middleNameController),
-            _buildTextField("Last Name", lastNameController),
-
-            SizedBox(height: 16.h),
-            ElevatedButton(
-              onPressed: () async {
-                // Call the DBHelper method to update user details
-                await MongoDatabase.updateUserByEmail(
-                  emailController.text.trim(),
-                  firstNameController.text.trim(),
-                  middleNameController.text.trim(),
-                  lastNameController.text.trim(),
-                );
-
-                // Optional: show success feedback
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Profile updated successfully')),
-                );
-
-
-                // Navigate back to MenuScreen after saving
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MenuScreen(userName: widget.userName),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: CircleAvatar(
+                    radius: 50.r,
+                    backgroundImage: AssetImage('assets/profile_pic.png'),
                   ),
-                );
-              },
+                ),
+                SizedBox(height: 16.h),
+                _buildTextField("Student ID", studentIdController, enabled: false),
+                _buildTextField("Email", emailController, enabled: false),
+                _buildTextField("First Name", firstNameController),
+                _buildTextField("Middle Name", middleNameController),
+                _buildTextField("Last Name", lastNameController),
 
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF2D3A8C),
-                padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 40.w),
-              ),
-              child: Text(
-                "Save",
-                style: TextStyle(color: Colors.white, fontSize: 16.sp),
-              ),
+                _buildDropdownField(
+                  label: "Program",
+                  selectedValue: selectedProgram,
+                  options: programOptions,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedProgram = value;
+                    });
+                  },
+                  hintText: "Enter Department",
+                ),
+                _buildDropdownField(
+                  label: "Year Level",
+                  selectedValue: selectedYearLevel,
+                  options: yearLevelOptions,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedYearLevel = value;
+                    });
+                  },
+                  hintText: "Enter Year Level",
+                ),
+
+                SizedBox(height: 16.h),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await MongoDatabase.updateUserByEmail(
+                        emailController.text.trim(),
+                        firstNameController.text.trim(),
+                        middleNameController.text.trim(),
+                        lastNameController.text.trim(),
+                        selectedProgram!.trim(),
+                        selectedYearLevel!.trim(),
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Profile updated successfully')),
+                      );
+
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MenuScreen(userName: widget.userName),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF2D3A8C),
+                      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 40.w),
+                    ),
+                    child: Text(
+                      "Save",
+                      style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
       bottomNavigationBar: _buildFooterNav(context),
     );
   }
+
+
+
+
+  Widget _buildDropdownField({
+    required String label,
+    required String? selectedValue,
+    required List<String> options,
+    required void Function(String?) onChanged,
+    required String hintText,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.h),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: selectedValue,
+            hint: Text(hintText),
+            isExpanded: true,
+            onChanged: onChanged,
+            items: options.map((option) {
+              return DropdownMenuItem<String>(
+                value: option,
+                child: Text(option),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildTextField(
     String label,

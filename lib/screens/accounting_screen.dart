@@ -5,10 +5,56 @@ import '../widgets/custom_footer_with_nav.dart';
 import '../widgets/custom_header_with_title.dart';
 import 'home_screen.dart';
 import 'paymentform_screen.dart';
+import 'confirmationticket_screen.dart';
+import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
-class AccountingScreen extends StatelessWidget {
-  final String userName;
+class AccountingScreen extends StatefulWidget {
+  final String userName ;
   const AccountingScreen({super.key, required this.userName});
+
+  @override
+  State<AccountingScreen> createState() => _AccountingScreen();
+}
+
+class _AccountingScreen extends State<AccountingScreen> {
+  Map<String, dynamic>? user;
+  List<Map<String, dynamic>> transactions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+    loadTransactions();
+  }
+
+  Future<void> loadTransactions() async {
+    transactions =
+    await MongoDatabase.getTransactionsByDepartment("accounting");
+    setState(() {});
+  }
+
+  Future<void> fetchUserData() async {
+    try {
+      final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
+      setState(() {
+        user = fetchedUser;
+      });
+
+      if (fetchedUser == null) {
+        // Optional: Handle case where user wasn't found
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not found')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        user = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching user: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +74,8 @@ class AccountingScreen extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        noAnimationRoute(HomeScreen(userName: userName)),
-                        (route) => false,
+                        noAnimationRoute(HomeScreen(userName: widget.userName)),
+                            (route) => false,
                       );
                     },
                   ),
@@ -45,7 +91,7 @@ class AccountingScreen extends StatelessWidget {
                     children: [
                       SizedBox(height: 30.h),
                       Text(
-                        "Hello, $userName!",
+                        "Hello, ${user!['firstName']}",
                         style: TextStyle(
                           fontSize: 22.sp,
                           fontWeight: FontWeight.bold,
@@ -61,28 +107,86 @@ class AccountingScreen extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 40.h),
-                      _buildAccountingCard(context),
+                      transactions.isEmpty
+                          ? Center(
+                        child: Text(
+                          "No transaction for this department",
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            color: Color(0xFF2D3A8C), // Blue color from your palette
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      )
+                          : Wrap(
+                        spacing: 12.w,
+                        runSpacing: 12.h,
+                        alignment: WrapAlignment.center,
+                        children: transactions.map((transaction) {
+                          return buildTransactionCard(transaction, () {
+                            Navigator.push(
+                              context,
+                              noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'])),
+                            );
+                          });
+                        }).toList(),
+                      ),
                       SizedBox(height: 20.h),
+
                     ],
                   ),
                 ),
               ),
             ),
-            CustomFooterWithNav(userName: userName, activeTab: 'home'),
+            CustomFooterWithNav(userName: widget.userName, activeTab: 'home'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAccountingCard(BuildContext context) {
+//   Widget _buildAccountingCard(BuildContext context) {
+//     return GestureDetector(
+//       onTap: () {
+//         Navigator.push(
+//           context,
+//           noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName)),
+//         );
+//       },
+//       child: Container(
+//         width: 120.w,
+//         height: 120.h,
+//         decoration: BoxDecoration(
+//           color: const Color(0xFF2D3A8C),
+//           borderRadius: BorderRadius.circular(12.r),
+//           boxShadow: [
+//             BoxShadow(
+//               color: Colors.black26,
+//               blurRadius: 5,
+//               offset: const Offset(2, 2),
+//             ),
+//           ],
+//         ),
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             Icon(Icons.credit_card, size: 40.sp, color: Colors.white),
+//             SizedBox(height: 8.h),
+//             Text(
+//               "Payment",
+//               style: TextStyle(color: Colors.white, fontSize: 14.sp),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+  Widget buildTransactionCard(Map<String, dynamic> transaction,
+      VoidCallback onTap) {
     return GestureDetector(
-      onTap: () {
-        Navigator.pushReplacement(
-          context,
-          noAnimationRoute(PaymentFormScreen(userName: userName)),
-        );
-      },
+      onTap: onTap,
       child: Container(
         width: 120.w,
         height: 120.h,
@@ -101,10 +205,12 @@ class AccountingScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.credit_card, size: 40.sp, color: Colors.white),
+            // You can map from transaction['icon'] if needed
             SizedBox(height: 8.h),
             Text(
-              "Payment",
+              transaction['name'] ?? 'Transaction',
               style: TextStyle(color: Colors.white, fontSize: 14.sp),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -112,3 +218,4 @@ class AccountingScreen extends StatelessWidget {
     );
   }
 }
+

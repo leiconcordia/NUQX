@@ -26,10 +26,10 @@ class PaymentFormScreen extends StatelessWidget {
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () {
-                      Navigator.pushAndRemoveUntil(
+                      Navigator.push(
                         context,
                         noAnimationRoute(AccountingScreen(userName: userName)),
-                        (route) => false,
+
                       );
                     },
                   ),

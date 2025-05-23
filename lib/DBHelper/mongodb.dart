@@ -6,6 +6,8 @@ import 'package:flutter_application_1/DBHelper/constant.dart';
 class MongoDatabase {
   static late Db db;
   static late DbCollection userCollection;
+  static late DbCollection queueNumbersCollection;
+  static late DbCollection transactionCollection;
 
   static Future<void> connect() async {
     try {
@@ -13,15 +15,21 @@ class MongoDatabase {
       await db.open();
       inspect(db);
       userCollection = db.collection(USER_COLLECTION);
+      queueNumbersCollection = db.collection(QUEUE_NUMBERS);
+      transactionCollection = db.collection(TRANSACTIONS);
+      userCollection = db.collection(USER_COLLECTION);
+
       print("✅ MongoDB connected!");
     } catch (e) {
       print("❌ Error connecting to MongoDB: $e");
     }
   }
+
 //signin
   static Future<Map<String, dynamic>?> getUserByEmail(String email) async {
     try {
       final user = await userCollection.findOne({'email': email});
+
       if (user != null) {
         print("✅ User found: $user");
       } else {
@@ -32,8 +40,6 @@ class MongoDatabase {
       print("❌ Error fetching user: $e");
       return null;
     }
-
-
   }
 
 //Signup
@@ -51,6 +57,7 @@ class MongoDatabase {
     final user = await userCollection.findOne({"studentID": studentID});
     return user;
   }
+
 //FOR VALIDATION
   static Future<dynamic> getUserById(String id) async {
     final user = await userCollection.findOne({"_id": ObjectId.parse(id)});
@@ -58,13 +65,17 @@ class MongoDatabase {
   }
 
 //FOR UPDATE USER INFO
-  static Future<void> updateUserByEmail(String email, String firstName, String middleName, String lastName) async {
+  static Future<void> updateUserByEmail(String email, String firstName,
+      String middleName, String lastName, String program,
+      String yearLevel) async {
     final result = await userCollection.updateOne(
       where.eq("email", email),
       modify
           .set("firstName", firstName)
           .set("middleName", middleName)
-          .set("lastName", lastName),
+          .set("lastName", lastName)
+          .set("program", program) // ✅ Fixed
+          .set("yearLevel", yearLevel),
     );
 
     if (!result.isSuccess) {
@@ -81,9 +92,12 @@ class MongoDatabase {
     );
   }
 
-
-
-
+  static Future<List<Map<String, dynamic>>> getTransactionsByDepartment(String department) async {
+    final transactions = await transactionCollection
+        .find({'department': department.toLowerCase()})
+        .toList();
+    return transactions;
+  }
 
 
 }
