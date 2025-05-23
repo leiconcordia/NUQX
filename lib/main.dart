@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_application_1/screens/signup_screen.dart';
 import 'package:flutter_application_1/screens/login_screen.dart';
 import 'package:flutter_application_1/screens/location_screen.dart';
+
 import 'package:mongo_dart/mongo_dart.dart';
 import 'dart:ui' as ui;
 
@@ -33,11 +34,12 @@ class MyApp extends StatelessWidget {
             primaryColor: const Color(0xFF2D3A8C),
             fontFamily: 'Poppins', // Set global font to Poppins
           ),
-          initialRoute: '/location', // Set Location Screen as the first page
+          initialRoute: '/signup', // Set Location Screen as the first page
           routes: {
             '/login': (context) => const LoginScreen(),
             '/signup': (context) => const SignUpScreen(),
-            '/location': (context) => LocationScreen(),
+            '/location': (context) => const LocationScreen(),
+
           },
         );
       },

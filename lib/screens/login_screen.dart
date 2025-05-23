@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/verified_page_screen.dart';
+import 'package:flutter_application_1/screens/verify_screen.dart';
+import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/custom_footer.dart';
 import '../widgets/custom_header.dart';
@@ -88,14 +90,23 @@ class _LoginScreenState extends State<LoginScreen> {
                             bool passwordMatch = BCrypt.checkpw(password, user['password']);
 
                             if (passwordMatch) {
-                              // 4. Login successful — go to next screen
-                              _navigateToScreen(
-                                context,
-                                VerifiedPage(
-                                  userName: user['email'],      // Make sure keys match MongoDB field names
-                                  // Convert ObjectId to String
-                                ),
-                              );
+                              await MongoDatabase.verifyAccountByEmail(email);
+
+                              // Check account verification status
+                              if (user['AccountStatus'] == 'verified') {
+                                // Account is verified, navigate to HomeScreen
+                                _navigateToScreen(
+                                  context,
+                                  HomeScreen(userName: user['email']),
+                                );
+                              } else {
+                                // Account is not verified, navigate to OTPVerificationScreen
+                                _navigateToScreen(
+                                  context,
+                                  OTPVerificationScreen(
+                                      userName: user['email']),
+                                );
+                              }
 
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(

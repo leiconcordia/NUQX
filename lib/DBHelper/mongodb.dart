@@ -57,6 +57,31 @@ class MongoDatabase {
     return user;
   }
 
+//FOR UPDATE USER INFO
+  static Future<void> updateUserByEmail(String email, String firstName, String middleName, String lastName) async {
+    final result = await userCollection.updateOne(
+      where.eq("email", email),
+      modify
+          .set("firstName", firstName)
+          .set("middleName", middleName)
+          .set("lastName", lastName),
+    );
+
+    if (!result.isSuccess) {
+      print('❌ Update failed');
+    } else {
+      print('✅ Update successful');
+    }
+  }
+
+  static Future<void> verifyAccountByEmail(String email) async {
+    await userCollection.updateOne(
+      where.eq("email", email),
+      modify.set("AccountStatus", "verified"),
+    );
+  }
+
+
 
 
 

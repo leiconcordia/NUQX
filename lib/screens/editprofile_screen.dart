@@ -74,11 +74,26 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             _buildTextField("Student ID", studentIdController, enabled: false),
             _buildTextField("Email", emailController, enabled: false),
             _buildTextField("First Name", firstNameController),
-            _buildTextField("Last Name", lastNameController),
             _buildTextField("Middle Name", middleNameController),
+            _buildTextField("Last Name", lastNameController),
+
             SizedBox(height: 16.h),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                // Call the DBHelper method to update user details
+                await MongoDatabase.updateUserByEmail(
+                  emailController.text.trim(),
+                  firstNameController.text.trim(),
+                  middleNameController.text.trim(),
+                  lastNameController.text.trim(),
+                );
+
+                // Optional: show success feedback
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Profile updated successfully')),
+                );
+
+
                 // Navigate back to MenuScreen after saving
                 Navigator.pushReplacement(
                   context,
@@ -87,6 +102,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   ),
                 );
               },
+
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF2D3A8C),
                 padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 40.w),

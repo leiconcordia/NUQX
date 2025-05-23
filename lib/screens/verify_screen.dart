@@ -5,8 +5,12 @@ import 'verified_page_screen.dart';
 import '../widgets/custom_footer.dart';
 import '../widgets/custom_header.dart';
 
+
+
+
 class OTPVerificationScreen extends StatefulWidget {
-  const OTPVerificationScreen({super.key});
+  final String userName;
+  const OTPVerificationScreen({super.key, required this.userName});
 
   @override
   _OTPVerificationScreenState createState() => _OTPVerificationScreenState();
@@ -57,7 +61,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const VerifiedPage(userName: ''),
+          builder: (context) => VerifiedPage(userName: widget.userName),
         ),
       );
     }
@@ -87,7 +91,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
             ),
             SizedBox(height: 10.h),
             Text(
-              "Enter the OTP sent to \ncruzdama@students.national-u.edu.ph",
+              "Enter the OTP sent to \n${widget.userName}!",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14.sp, color: Colors.black54),
             ),

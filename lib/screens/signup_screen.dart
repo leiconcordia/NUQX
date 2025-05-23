@@ -4,7 +4,7 @@ import '../widgets/custom_footer.dart';
 import '../widgets/custom_header.dart';
 import 'login_screen.dart';
 import 'package:bcrypt/bcrypt.dart';
-
+import 'package:flutter_application_1/screens/verify_screen.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -18,6 +18,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   final TextEditingController _studentIDController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _middleNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -26,6 +27,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void dispose() {
     _studentIDController.dispose();
     _firstNameController.dispose();
+    _middleNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -68,6 +70,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       _buildTextField(controller: _studentIDController),
                       _buildLabel("First Name*"),
                       _buildTextField(controller: _firstNameController ),
+                      _buildLabel("Middle Name"),
+                      _buildTextField(controller: _middleNameController ),
                       _buildLabel("Last Name*"),
                       _buildTextField(controller: _lastNameController),
                       _buildLabel("Email*"),
@@ -88,6 +92,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           onPressed: () async {
                             String studentID = _studentIDController.text.trim();
                             String firstName = _firstNameController.text.trim();
+                            String middleName = _middleNameController.text.trim();
                             String lastName = _lastNameController.text.trim();
                             String email = _emailController.text.trim();
                             String password = _passwordController.text.trim();
@@ -105,13 +110,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               );
                               return;
                             }
-                            // Validate Student ID: must be exactly 11 digits
-                            if (!RegExp(r'^\d{11}$').hasMatch(studentID)) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("❌ Student ID must be 11 digits")),
-                              );
-                              return;
-                            }
+                            // // Validate Student ID: must be exactly 11 digits
+                            // if (!RegExp(r'^\d{11}$').hasMatch(studentID)) {
+                            //   ScaffoldMessenger.of(context).showSnackBar(
+                            //     SnackBar(content: Text("❌ Student ID must be 11 digits")),
+                            //   );
+                            //   return;
+                            // }
 
                             // Validate Email: must be a valid gmail address
                             if (!email.endsWith("@gmail.com")) {
@@ -153,10 +158,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             Map<String, dynamic> newUser = {
                               "studentID": studentID,
                               "firstName": firstName,
+                              "middleName": middleName,
                               "lastName": lastName,
                               "email": email,
                               "password": hashedPassword,
                               "role": "student",
+                              "accountStatus": "not verified",
                               "createdAt": DateTime.now().toIso8601String(),
                             };
 
@@ -176,6 +183,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             );
                             _studentIDController.clear();
                             _firstNameController.clear();
+                            _middleNameController.clear();
                             _lastNameController.clear();
                             _emailController.clear();
                             _passwordController.clear();
