@@ -9,8 +9,9 @@ import 'confirmationticket_screen.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
 class AccountingScreen extends StatefulWidget {
-  final String userName ;
-  const AccountingScreen({super.key, required this.userName});
+  final String userName;
+
+  const AccountingScreen({Key? key, required this.userName}) : super(key: key);
 
   @override
   State<AccountingScreen> createState() => _AccountingScreen();
@@ -91,7 +92,8 @@ class _AccountingScreen extends State<AccountingScreen> {
                     children: [
                       SizedBox(height: 30.h),
                       Text(
-                        "Hello, ${user!['firstName']}",
+                        "Hello, ${user?['firstName'] ?? 'User'}",
+
                         style: TextStyle(
                           fontSize: 22.sp,
                           fontWeight: FontWeight.bold,
@@ -126,7 +128,7 @@ class _AccountingScreen extends State<AccountingScreen> {
                           return buildTransactionCard(transaction, () {
                             Navigator.push(
                               context,
-                              noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'])),
+                              noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'],  transactionID: transaction['transactionID'], department : 'accounting')),
                             );
                           });
                         }).toList(),

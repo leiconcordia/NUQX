@@ -11,6 +11,8 @@ import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
 class RegistrarScreen extends StatefulWidget {
   final String userName;
+
+
   const RegistrarScreen({super.key, required this.userName});
 
   @override
@@ -78,7 +80,7 @@ class _RegistrarScreen extends State<RegistrarScreen> {
                   children: [
                     SizedBox(height: 30.h),
                     Text(
-                      "Hello, ${user!['firstName']}",
+                      "Hello, ${user?['firstName'] ?? 'User'}",
                       style: TextStyle(
                         fontSize: 22.sp,
                         fontWeight: FontWeight.bold,
@@ -110,7 +112,7 @@ class _RegistrarScreen extends State<RegistrarScreen> {
                         return buildTransactionCard(transaction, () {
                           Navigator.push(
                             context,
-                            noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'])),
+                            noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'],  transactionID: transaction['transactionID'], department : 'registrar')),
                           );
                         });
                       }).toList(),

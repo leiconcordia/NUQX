@@ -1,16 +1,114 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_application_1/utils/custom_page_route.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/custom_footer_with_nav.dart';
 import '../widgets/custom_header_with_title.dart';
 
-class TrackerScreen extends StatelessWidget {
+class TrackerScreen extends StatefulWidget {
   static const String routeName = "/tracker";
   final String userName;
 
 
+
   const TrackerScreen({super.key, required this.userName});
+  @override
+  State<TrackerScreen> createState() => _TrackerScreen();
+}
+
+class _TrackerScreen extends State<TrackerScreen> {
+  Map<String, dynamic>? queueInfo; // Holds the queue info
+
+  String? nowServingQueue;
+
+
+  bool isLoading = true;
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    loadQueueInfo();
+   //_fetchNowServingNumber();
+    _setupAutoRefresh();// Call async method after widget is initialized
+  }
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _setupAutoRefresh() {
+    // Refresh data every 30 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _loadData();
+    });
+  }
+
+
+  Future<void> _loadData() async {
+    try {
+      await Future.wait([
+        loadQueueInfo(),
+        //_loadNowServing(),
+      ]);
+    } catch (e) {
+      // Handle any errors that occur during loading
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading data: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+
+  // Future<void> _loadNowServing() async {
+  //   final nowServing = await MongoDatabase.getNowServingQueueNumber();
+  //   if (mounted) {
+  //     setState(() => nowServingQueue = nowServing);
+  //   }
+  // }
+
+
+
+  Future<void> loadQueueInfo() async {
+    final info = await MongoDatabase.getQueueInfoByEmail(widget.userName);
+    setState(() {
+      queueInfo = info;
+      isLoading = false;
+    });
+  }
+
+
+  // Future<void> _fetchNowServingNumber() async {
+  //   try {
+  //     final number = await MongoDatabase.getNowServingQueueNumber(widget.transactionName);
+  //     if (mounted) {
+  //       setState(() {
+  //         nowServingQueue = number;
+  //       });
+  //     }
+  //   } catch (e) {
+  //     if (mounted) {
+  //       setState(() {
+  //         nowServingQueue = null;
+  //       });
+  //     }
+  //     // Optionally show error message
+  //     debugPrint('Error fetching queue number: $e');
+  //   }
+  // }
+  //
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +128,7 @@ class TrackerScreen extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        noAnimationRoute(HomeScreen(userName: userName)),
+                        noAnimationRoute(HomeScreen(userName: widget.userName)),
                         (route) => false,
                       );
                     },
@@ -44,21 +142,37 @@ class TrackerScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _buildProgressIndicator(),
-                    SizedBox(height: 20.h),
-                    _buildQueueInfoBox(),
+                    if (queueInfo != null && queueInfo!.isNotEmpty) ...[
+                      _buildProgressIndicator(),
+                      SizedBox(height: 20.h),
+                      _buildQueueInfoBox(),
+                    ] else ...[
+                      SizedBox(height: 15.h),
+                      Text(
+                        "NO QUEUE FOUND",
+                        style: TextStyle(
+                          fontSize: 30.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3A8C), // blue text
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
+
+
             CustomFooterWithNav(
-              userName: userName,
+              userName: widget.userName,
               activeTab: 'tracker',),
           ],
         ),
       ),
     );
   }
+
+
 
   Widget _buildProgressIndicator() {
     return Row(
@@ -74,6 +188,8 @@ class TrackerScreen extends StatelessWidget {
       }),
     );
   }
+
+
 
   Widget _buildQueueInfoBox() {
     return Container(
@@ -99,7 +215,8 @@ class TrackerScreen extends StatelessWidget {
           ),
           SizedBox(height: 5.h),
           Text(
-            "Queue No. ENR001",
+            //now serving queue number
+            "Queue No. ",
             style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 20.h),
@@ -109,7 +226,8 @@ class TrackerScreen extends StatelessWidget {
           ),
           SizedBox(height: 5.h),
           Text(
-            "ENR0001",
+            //your queue number
+            "${queueInfo!['generatedQueuenumber']}",
             style: TextStyle(
               fontSize: 28.sp,
               fontWeight: FontWeight.bold,
@@ -118,13 +236,14 @@ class TrackerScreen extends StatelessWidget {
           ),
           SizedBox(height: 20.h),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildQueueInfo("29", "People In Waiting"),
-              SizedBox(width: 40.w),
-              _buildQueueInfo("35 MIN", "Approx. Wait Time"),
+              Flexible(child: _buildQueueInfo("29", "People In Waiting")),
+              Flexible(child: _buildQueueInfo("35 MIN", "Approx. Wait Time")),
             ],
           ),
+
+
         ],
       ),
     );

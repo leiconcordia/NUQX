@@ -87,7 +87,7 @@ class _AdmissionScreen extends State<AdmissionScreen> {
                   children: [
                     SizedBox(height: 30.h),
                     Text(
-                      "Hello, ${user!['firstName']}",
+                      "Hello, ${user?['firstName'] ?? 'User'}",
                       style: TextStyle(
                         fontSize: 22.sp,
                         fontWeight: FontWeight.bold,
@@ -119,7 +119,7 @@ class _AdmissionScreen extends State<AdmissionScreen> {
                         return buildTransactionCard(transaction, () {
                           Navigator.push(
                             context,
-                            noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'])),
+                            noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'],  transactionID: transaction['transactionID'], department : 'admission')),
                           );
                         });
                       }).toList(),

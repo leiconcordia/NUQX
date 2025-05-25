@@ -10,8 +10,10 @@ import 'package:flutter_application_1/DBHelper/mongodb.dart';
 class ConfirmationTicketScreen extends StatefulWidget {
   final String userName;
   final String transactionConcern;
+  final String transactionID;
+  final String department;
 
-  const ConfirmationTicketScreen({super.key, required this.userName, required this.transactionConcern});
+  const ConfirmationTicketScreen({super.key, required this.userName, required this.transactionConcern, required this.transactionID, required this.department});
   @override
   State<ConfirmationTicketScreen> createState() => _ConfirmationTicketScreen();
 }
@@ -93,10 +95,11 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
               ],
             ),
             SizedBox(height: 10.h),
-            _buildDetailText("Name", '${user!['firstName']} ${user!['lastName']}'),
-            _buildDetailText("Student ID", '${user!['studentID']}' ),
-            _buildDetailText("Department", '${user!['program']}' ),
-            _buildDetailText("Concern", widget.transactionConcern ),
+            _buildDetailText(
+              "Name", '${user?['firstName'] ?? ''} ${user?['lastName'] ?? 'User'}'),
+                _buildDetailText("Student ID", '${user!['studentID']}'),
+            _buildDetailText("Department", '${user!['program']}'),
+            _buildDetailText("Concern", widget.transactionConcern),
             SizedBox(height: 20.h),
             _buildActionButtons(context),
           ],
@@ -125,10 +128,57 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
           },
           child: Text("Back", style: TextStyle(fontSize: 16.sp)),
         ),
-
         SizedBox(width: 10.w),
         ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
+            final hasActive = await MongoDatabase.hasActiveQueue(
+                widget.userName);
+
+            if (hasActive) {
+              showDialog(
+                context: context,
+                builder: (context) =>
+                    AlertDialog(
+                      title: Text("Queue Already Exists"),
+                      content: Text(
+                        "You already have an ongoing queue. Please wait until it is completed before queuing again.",
+                      ),
+                      actions: [
+                        TextButton(
+                          child: Text("OK"),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+              );
+              return;
+            }
+
+            // Generate queue number
+            final generatedNumber = await MongoDatabase.generateQueueNumber(
+              widget.transactionID,
+              widget.transactionConcern,
+            );
+
+            // Prepare queue data
+            final newQueue = {
+              'user': widget.userName,
+              'transactionName': widget.transactionConcern,
+              'transactionID': widget.transactionID,
+              'generatedQueuenumber': generatedNumber,
+              'isPriority': false,
+              'status': 'waiting',
+              'windowNumber': '',
+              'createdAt': DateTime.now().toUtc(),
+              'updatedAt': '',
+              'dateEnded': '',
+              'department': widget.department,
+            };
+
+            // Insert into DB
+            await MongoDatabase.insertQueueNumber(newQueue);
+
+            // Navigate
             Navigator.pushAndRemoveUntil(
               context,
               noAnimationRoute(TrackerScreen(userName: widget.userName)),
@@ -151,3 +201,4 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
     );
   }
 }
+

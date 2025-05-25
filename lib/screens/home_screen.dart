@@ -117,13 +117,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           _buildCategoryTile(
                             title: "Accounting",
-                            icon: Icons.credit_card, // Changed icon
-                            onTap:
-                                () => _navigateToScreen(
+                            icon: Icons.credit_card,
+                            onTap: () {
+                              try {
+                                _navigateToScreen(
                                   context,
                                   AccountingScreen(userName: widget.userName),
-                                ),
+                                );
+                              } catch (e, stackTrace) {
+                                debugPrint('Navigation Error: $e');
+                                debugPrint('StackTrace: $stackTrace');
+                              }
+                            },
                           ),
+
                           _buildCategoryTile(
                             title: "Registrar",
                             icon: Icons.create_outlined, // Changed icon

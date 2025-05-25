@@ -6,6 +6,9 @@ import 'package:flutter_application_1/screens/tracker_screen.dart';
 
 class CustomFooterWithNav extends StatelessWidget {
   final String userName;
+
+
+
   final String activeTab;
 
   const CustomFooterWithNav({
@@ -48,7 +51,7 @@ class CustomFooterWithNav extends StatelessWidget {
             onTap:
                 () => _navigateToScreen(
                   context,
-                  TrackerScreen(userName: userName),
+                  TrackerScreen(userName: userName, ),
                 ),
           ),
           _buildNavButton(
