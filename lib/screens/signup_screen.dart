@@ -143,7 +143,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               return;
                             }
 
-                            // ✅ Optional: also check for duplicate Student ID
+                            //  check for duplicate Student ID
                             var existingStudent = await MongoDatabase.getUserByStudentID(studentID);
                             if (existingStudent != null) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -152,7 +152,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               return;
                             }
 
-                            // ✅ Proceed with account creation
+
                             final hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
                             Map<String, dynamic> newUser = {

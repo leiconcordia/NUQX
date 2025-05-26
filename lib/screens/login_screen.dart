@@ -92,21 +92,26 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (passwordMatch) {
                               await MongoDatabase.verifyAccountByEmail(email);
 
-                              // Check account verification status
-                              if (user['AccountStatus'] == 'verified') {
-                                // Account is verified, navigate to HomeScreen
-                                _navigateToScreen(
-                                  context,
-                                  HomeScreen(userName: user['email']),
-                                );
-                              } else {
-                                // Account is not verified, navigate to OTPVerificationScreen
-                                _navigateToScreen(
-                                  context,
-                                  OTPVerificationScreen(
-                                      userName: user['email']),
-                                );
-                              }
+                              _navigateToScreen(
+                                     context,
+                                      HomeScreen(userName: user['email']),
+                              );
+
+                              // // Check account verification status
+                              // if (user['AccountStatus'] == 'verified') {
+                              //   // Account is verified, navigate to HomeScreen
+                              //   _navigateToScreen(
+                              //     context,
+                              //     HomeScreen(userName: user['email']),
+                              //   );
+                              // } else {
+                              //   // Account is not verified, navigate to OTPVerificationScreen
+                              //   _navigateToScreen(
+                              //     context,
+                              //     OTPVerificationScreen(
+                              //         userName: user['email']),
+                              //   );
+                              // }
 
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(

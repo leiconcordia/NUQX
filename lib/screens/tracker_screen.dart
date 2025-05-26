@@ -22,11 +22,11 @@ class TrackerScreen extends StatefulWidget {
 class _TrackerScreen extends State<TrackerScreen> {
   Map<String, dynamic>? queueInfo; // Holds the queue info
 
-  String? nowServingQueue;
-
-
   bool isLoading = true;
   Timer? _refreshTimer;
+  String? nowServingQueueNumber;
+  int peopleInWaiting = 0;
+  String approxWaitTime = "0 min";
 
   @override
   void initState() {
@@ -34,6 +34,8 @@ class _TrackerScreen extends State<TrackerScreen> {
     loadQueueInfo();
    //_fetchNowServingNumber();
     _setupAutoRefresh();// Call async method after widget is initialized
+    loadWaitInfo();
+    _loadNowServing();
   }
   @override
   void dispose() {
@@ -43,17 +45,21 @@ class _TrackerScreen extends State<TrackerScreen> {
 
   void _setupAutoRefresh() {
     // Refresh data every 30 seconds
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _loadData();
     });
   }
+
+
 
 
   Future<void> _loadData() async {
     try {
       await Future.wait([
         loadQueueInfo(),
-        //_loadNowServing(),
+        _loadNowServing(),
+        loadWaitInfo()
+
       ]);
     } catch (e) {
       // Handle any errors that occur during loading
@@ -69,13 +75,27 @@ class _TrackerScreen extends State<TrackerScreen> {
     }
   }
 
+  Future<void> loadWaitInfo() async {
+    final result = await MongoDatabase.getQueueWaitInfo(widget.userName);
 
-  // Future<void> _loadNowServing() async {
-  //   final nowServing = await MongoDatabase.getNowServingQueueNumber();
-  //   if (mounted) {
-  //     setState(() => nowServingQueue = nowServing);
-  //   }
-  // }
+    if (mounted) {
+      setState(() {
+        peopleInWaiting = result["peopleInWaiting"];
+        approxWaitTime = result["approxWaitTime"];
+      });
+    }
+  }
+
+
+  Future<void> _loadNowServing() async {
+    final nowServing = await MongoDatabase.getNowServingForUser(widget.userName);
+    if (mounted) {
+      setState(() {
+        nowServingQueueNumber = nowServing; // Save it to state
+      });
+    }
+  }
+
 
 
 
@@ -147,13 +167,17 @@ class _TrackerScreen extends State<TrackerScreen> {
                       SizedBox(height: 20.h),
                       _buildQueueInfoBox(),
                     ] else ...[
-                      SizedBox(height: 15.h),
-                      Text(
-                        "NO QUEUE FOUND",
-                        style: TextStyle(
-                          fontSize: 30.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3A8C), // blue text
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            "You're still \nnot in \nqueue!",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 50.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2D3A8C), // blue text
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -161,6 +185,7 @@ class _TrackerScreen extends State<TrackerScreen> {
                 ),
               ),
             ),
+
 
 
             CustomFooterWithNav(
@@ -215,10 +240,11 @@ class _TrackerScreen extends State<TrackerScreen> {
           ),
           SizedBox(height: 5.h),
           Text(
-            //now serving queue number
-            "Queue No. ",
+            // Now serving queue number or fallback
+            "Queue No. ${nowServingQueueNumber ?? '-'}",
             style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
           ),
+
           SizedBox(height: 20.h),
           Text(
             "Your Queue Number",
@@ -238,10 +264,11 @@ class _TrackerScreen extends State<TrackerScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Flexible(child: _buildQueueInfo("29", "People In Waiting")),
-              Flexible(child: _buildQueueInfo("35 MIN", "Approx. Wait Time")),
+              Flexible(child: _buildQueueInfo("$peopleInWaiting", "People In Waiting")),
+              Flexible(child: _buildQueueInfo(approxWaitTime, "Approx. Wait Time")),
             ],
           ),
+
 
 
         ],

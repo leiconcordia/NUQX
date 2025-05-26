@@ -36,12 +36,12 @@ class MyApp extends StatelessWidget {
             primaryColor: const Color(0xFF2D3A8C),
             fontFamily: 'Poppins', // Set global font to Poppins
           ),
-          initialRoute: '/homescreen', // Set Location Screen as the first page
+          initialRoute: '/login', // Set Location Screen as the first page
           routes: {
             '/login': (context) => const LoginScreen(),
             '/signup': (context) => const SignUpScreen(),
             '/location': (context) => const LocationScreen(),
-            '/homescreen': (context) => const HomeScreen(userName: 'alexis@gmail.com'),
+           // '/homescreen': (context) => const HomeScreen(),
 
           },
         );

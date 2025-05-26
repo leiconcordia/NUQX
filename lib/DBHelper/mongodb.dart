@@ -132,18 +132,21 @@ class MongoDatabase {
   static Future<Map<String, dynamic>?> getQueueInfoByEmail(String email) async {
     try {
       final result = await queueNumbersCollection.findOne(
-        where.eq('user', email).sortBy('createdAt', descending: true),
+        where
+            .eq('user', email)
+            .eq('status', 'waiting')
+            .sortBy('createdAt', descending: true),
       );
 
       if (result != null) {
-        print("✅ Queue found for $email");
+        print("✅ Waiting queue found for $email");
       } else {
-        print("❌ No queue found for $email");
+        print("❌ No waiting queue found for $email");
       }
 
       return result;
     } catch (e) {
-      print("❌ Error fetching queue info: $e");
+      print("❌ Error fetching waiting queue info: $e");
       return null;
     }
   }
@@ -162,21 +165,95 @@ class MongoDatabase {
     }
   }
 
-  static Future<String?> getNowServingQueueNumber(String transactionName) async {
+  static Future<String?> getNowServingForUser(String userName) async {
+    try {
+      // 1. Find user's waiting queue
+      final userQueue = await queueNumbersCollection.findOne(
+        where.eq('user', userName).eq('status', 'waiting'),
+      );
 
-    final queueCollection = db.collection('queue');
+      if (userQueue == null) {
+        print("❌ No waiting queue found for user: $userName");
+        return null;
+      }
 
-    final processingQueue = await queueCollection.findOne({
-      'transactionName': transactionName,
-      'status': 'processing',
-    });
+      final String transactionName = userQueue['transactionName'];
+      final String department = userQueue['department'];
 
-    if (processingQueue != null && processingQueue['generatedQueuenumber'] != null) {
-      return processingQueue['generatedQueuenumber'];
-    } else {
+      // 2. Find processing queue for same transaction and department
+      final processingQueue = await queueNumbersCollection.findOne(
+        where
+            .eq('transactionName', transactionName)
+            .eq('department', department)
+            .eq('status', 'processing'),
+      );
+
+      if (processingQueue != null) {
+        final queueNum = processingQueue['generatedQueuenumber'];
+        print("✅ Now serving for $transactionName: $queueNum");
+        return queueNum;
+      } else {
+        print("ℹ️ No processing queue for $transactionName in $department");
+        return null;
+      }
+    } catch (e) {
+      print("❌ Error in getNowServingForUser: $e");
       return null;
     }
   }
+
+  static Future<Map<String, dynamic>> getQueueWaitInfo(String email) async {
+    try {
+      // Step 1: Get user's queue with status "waiting"
+      final userQueue = await queueNumbersCollection.findOne(
+        where.eq('user', email).eq('status', 'waiting'),
+      );
+
+      if (userQueue == null || userQueue['transactionName'] == null) {
+        print("❌ No active waiting queue found for this user.");
+        return {
+          "peopleInWaiting": 0,
+          "approxWaitTime": "0 min",
+        };
+      }
+
+      final transactionName = userQueue['transactionName'];
+
+      // Step 2: Count all waiting queues with the same transactionName
+      final totalWaiting = await queueNumbersCollection.count({
+        'transactionName': transactionName,
+        'status': 'waiting',
+      });
+
+      // Step 3: Subtract current user's queue from total
+      final othersWaiting = (totalWaiting > 0) ? totalWaiting - 1 : 0;
+
+      // Step 4: Calculate approx wait time in minutes
+      final totalMinutes = othersWaiting * 5;
+
+      // Step 5: Format time string
+      final hours = totalMinutes ~/ 60;
+      final minutes = totalMinutes % 60;
+      String waitTimeFormatted = hours > 0
+          ? "$hours hr${hours > 1 ? 's' : ''} ${minutes} min"
+          : "$minutes min";
+
+      return {
+        "peopleInWaiting": othersWaiting,
+        "approxWaitTime": waitTimeFormatted,
+      };
+    } catch (e) {
+      print("❌ Error calculating queue wait info: $e");
+      return {
+        "peopleInWaiting": 0,
+        "approxWaitTime": "0 min",
+      };
+    }
+  }
+
+
+
+
 
 
 
