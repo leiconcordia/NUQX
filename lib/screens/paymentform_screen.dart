@@ -19,7 +19,7 @@ class PaymentFormScreen extends StatelessWidget {
           children: [
             Stack(
               children: [
-                const CustomHeaderWithTitle(title: "Payment"),
+                 //CustomHeaderWithTitle(title: "Payment"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,

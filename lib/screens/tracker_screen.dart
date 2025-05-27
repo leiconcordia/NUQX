@@ -139,7 +139,7 @@ class _TrackerScreen extends State<TrackerScreen> {
           children: [
             Stack(
               children: [
-                const CustomHeaderWithTitle(title: "Queue Tracker"),
+                 CustomHeaderWithTitle(userName: widget.userName, title: "Queue Tracker"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,

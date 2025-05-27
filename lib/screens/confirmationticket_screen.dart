@@ -45,7 +45,7 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const CustomHeaderWithTitle(title: "Details"),
+            CustomHeaderWithTitle(userName: widget.userName, title: "Details"),
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
@@ -77,7 +77,9 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
       color: Colors.white,
       child: Padding(
         padding: EdgeInsets.all(16.w),
-        child: Column(
+        child: user == null
+            ? Center(child: CircularProgressIndicator()) // or a placeholder
+            : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -96,14 +98,26 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
             ),
             SizedBox(height: 10.h),
             _buildDetailText(
-              "Name", '${user?['firstName'] ?? ''} ${user?['lastName'] ?? 'User'}'),
-                _buildDetailText("Student ID", '${user!['studentID']}'),
-            _buildDetailText("Department", '${user!['program']}'),
-            _buildDetailText("Concern", widget.transactionConcern),
+              "Name",
+              '${user?['firstName'] ?? ''} ${user?['lastName'] ?? 'User'}',
+            ),
+            _buildDetailText(
+              "Student ID",
+              '${user?['studentID'] ?? 'N/A'}',
+            ),
+            _buildDetailText(
+              "Department",
+              '${user?['program'] ?? 'N/A'}',
+            ),
+            _buildDetailText(
+              "Concern",
+              widget.transactionConcern,
+            ),
             SizedBox(height: 20.h),
             _buildActionButtons(context),
           ],
         ),
+
       ),
     );
   }

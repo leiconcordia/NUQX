@@ -19,7 +19,7 @@ class InquiryScreen extends StatelessWidget {
           children: [
             Stack(
               children: [
-                const CustomHeaderWithTitle(title: "Inquiry"),
+                //const CustomHeaderWithTitle(title: "Inquiry"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,

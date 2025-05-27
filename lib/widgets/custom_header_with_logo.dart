@@ -51,17 +51,17 @@ class CustomHeaderWithLogo extends StatelessWidget {
                 child: IconButton(
                   icon: const Icon(Icons.notifications, color: Colors.white),
                   onPressed: () {
-                    // Navigate to NotificationScreen when button is pressed
-                    Navigator.pushAndRemoveUntil(
+                    // Navigate to NotificationsScreen when button is pressed
+                    Navigator.push(
                       context,
                       noAnimationRoute(
                         NotificationsScreen(userName: userName),
-                      ), // Assuming NotificationScreen is the target
-                      (route) => false, // Removes all previous routes
+                      ),
                     );
                   },
                 ),
               ),
+
             ],
           ),
         ),

@@ -52,7 +52,7 @@ class _MenuScreenState extends State<MenuScreen> {
           children: [
             Stack(
               children: [
-                const CustomHeaderWithTitle(title: "Menu"),
+                 CustomHeaderWithTitle(userName: widget.userName, title: "Menu"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,

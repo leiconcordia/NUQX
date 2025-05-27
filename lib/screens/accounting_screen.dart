@@ -66,7 +66,7 @@ class _AccountingScreen extends State<AccountingScreen> {
           children: [
             Stack(
               children: [
-                const CustomHeaderWithTitle(title: "Accounting"),
+                 CustomHeaderWithTitle(userName: widget.userName, title: "Accounting"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,

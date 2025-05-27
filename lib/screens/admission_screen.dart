@@ -62,7 +62,7 @@ class _AdmissionScreen extends State<AdmissionScreen> {
           children: [
             Stack(
               children: [
-                const CustomHeaderWithTitle(title: "Admission"),
+                 CustomHeaderWithTitle(userName: widget.userName, title: "Admission"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,

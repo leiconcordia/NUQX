@@ -4,11 +4,43 @@ import 'package:flutter_application_1/utils/custom_page_route.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_application_1/widgets/custom_footer_with_nav.dart';
 import 'package:flutter_application_1/widgets/custom_header_with_title.dart';
+import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   final String userName;
 
+
+
   const NotificationsScreen({super.key, required this.userName});
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreen();
+}
+
+class _NotificationsScreen extends State<NotificationsScreen> {
+
+  int peopleInWaiting = 0;
+  String approxWaitTime = "0 min";
+
+
+  @override
+  void initState() {
+    super.initState();
+    loadWaitInfo();
+
+  }
+
+
+  Future<void> loadWaitInfo() async {
+    final result = await MongoDatabase.getQueueWaitInfo(widget.userName);
+
+    if (mounted) {
+      setState(() {
+        peopleInWaiting = result["peopleInWaiting"];
+        approxWaitTime = result["approxWaitTime"];
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -19,19 +51,18 @@ class NotificationsScreen extends StatelessWidget {
           children: [
             Stack(
               children: [
-                const CustomHeaderWithTitle(title: "Notifications"),
+                 CustomHeaderWithTitle(userName: widget.userName, title: "Notifications"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        noAnimationRoute(HomeScreen(userName: userName)),
-                        (route) => false,
-                      );
-                    },
+                      onPressed: () async {
+                        final user = await MongoDatabase.getUserByEmail(widget.userName);
+
+                        Navigator.of(context).pop();
+                        }
+
                   ),
                 ),
               ],
@@ -42,31 +73,28 @@ class NotificationsScreen extends StatelessWidget {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      _buildNotificationCard(
-                        title: "It's your turn",
-                        message: "Please proceed to counter 1",
-                      ),
-                      _buildNotificationCard(
-                        title: "Up next",
-                        message: "You're next! Please proceed to the counter.",
-                      ),
-                      _buildNotificationCard(
-                        title: "20 mins wait",
-                        message:
-                            "5 people remaining before it's your turn. Please get ready.",
-                      ),
+                     // if (peopleInWaiting > 0)
+                        _buildNotificationCard(
+                  title: "$approxWaitTime wait",
+                    message:
+                    "$peopleInWaiting people remaining before it's your turn. Please get ready.",
+                  ),
+
                       // Add more notification cards here if needed
                     ],
                   ),
                 ),
               ),
             ),
-            CustomFooterWithNav(userName: userName, activeTab: 'home',),
+            CustomFooterWithNav(userName: widget.userName, activeTab: 'home',),
           ],
         ),
       ),
     );
   }
+
+
+
 
   Widget _buildNotificationCard({
     required String title,
@@ -113,5 +141,8 @@ class NotificationsScreen extends StatelessWidget {
         ],
       ),
     );
+
+
+
   }
 }

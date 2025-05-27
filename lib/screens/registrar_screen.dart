@@ -55,7 +55,7 @@ class _RegistrarScreen extends State<RegistrarScreen> {
           children: [
             Stack(
               children: [
-                const CustomHeaderWithTitle(title: "Registrar"),
+                 CustomHeaderWithTitle(userName: widget.userName, title: "Registrar"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,

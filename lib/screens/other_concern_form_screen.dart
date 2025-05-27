@@ -19,7 +19,7 @@ class OtherConcernFormScreen extends StatelessWidget {
           children: [
             Stack(
               children: [
-                const CustomHeaderWithTitle(title: "Other Concern"),
+                 //CustomHeaderWithTitle(userName: widget.userName, title: "Other Concern"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,

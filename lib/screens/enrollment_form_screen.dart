@@ -18,7 +18,7 @@ class EnrollmentFormScreen extends StatelessWidget {
           children: [
             Stack(
               children: [
-                const CustomHeaderWithTitle(title: "Enrollment"),
+                //CustomHeaderWithTitle(userName: widget.userName, title: "Enrollment"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,

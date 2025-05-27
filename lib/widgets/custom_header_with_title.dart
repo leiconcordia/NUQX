@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../screens/notification_screen.dart';
+import '../utils/custom_page_route.dart';
+
 class CustomHeaderWithTitle extends StatelessWidget {
   final String title;
+  final String userName;
 
-  const CustomHeaderWithTitle({super.key, required this.title});
+
+  const CustomHeaderWithTitle({super.key, required this.userName, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +48,13 @@ class CustomHeaderWithTitle extends StatelessWidget {
                 child: IconButton(
                   icon: const Icon(Icons.notifications, color: Colors.white),
                   onPressed: () {
-                    // Handle notification button press
+                    // Navigate to NotificationsScreen when button is pressed
+                    Navigator.push(
+                      context,
+                      noAnimationRoute(
+                        NotificationsScreen(userName: userName),
+                      ),
+                    );
                   },
                 ),
               ),
