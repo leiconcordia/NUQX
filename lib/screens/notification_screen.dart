@@ -5,7 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_application_1/widgets/custom_footer_with_nav.dart';
 import 'package:flutter_application_1/widgets/custom_header_with_title.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
-
+import 'dart:async';
 class NotificationsScreen extends StatefulWidget {
   final String userName;
 
@@ -20,23 +20,41 @@ class _NotificationsScreen extends State<NotificationsScreen> {
 
   int peopleInWaiting = 0;
   String approxWaitTime = "0 min";
+  String queueStatus = 'waiting'; // add at top of your State class
 
+
+  List<Widget> persistentNotifications = [];
+  bool hasInitialWaitNotification = false;
+
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
-    loadWaitInfo();
+    loadWaitInfo(); // initial load
 
+    // Start auto-refresh every 3 seconds
+    _refreshTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+      loadWaitInfo();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel(); // Cancel timer when widget is disposed
+    super.dispose();
   }
 
 
   Future<void> loadWaitInfo() async {
     final result = await MongoDatabase.getQueueWaitInfo(widget.userName);
+    final status = await MongoDatabase.getUserQueueStatus(widget.userName);
 
     if (mounted) {
       setState(() {
         peopleInWaiting = result["peopleInWaiting"];
         approxWaitTime = result["approxWaitTime"];
+        queueStatus = status;
       });
     }
   }
@@ -71,21 +89,54 @@ class _NotificationsScreen extends State<NotificationsScreen> {
               child: Padding(
                 padding: EdgeInsets.all(16.w),
                 child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                     // if (peopleInWaiting > 0)
-                        _buildNotificationCard(
-                  title: "$approxWaitTime wait",
-                    message:
-                    "$peopleInWaiting people remaining before it's your turn. Please get ready.",
-                  ),
+                  child: Builder(
+                    builder: (context) {
+                      List<Widget> notifications = [];
 
-                      // Add more notification cards here if needed
-                    ],
+                      // Add notifications based on conditions
+                      if (queueStatus == 'processing') {
+                        notifications.add(_buildNotificationCard(
+                          title: "It's your turn",
+                          message: "Please proceed to counter 1",
+                        ));
+                      }
+
+                      if (peopleInWaiting == 1) {
+                        notifications.add(_buildNotificationCard(
+                          title: "Up next",
+                          message: "You're next! Please proceed to the counter.",
+                        ));
+                      }
+
+                      if (peopleInWaiting >= 1) {
+                        notifications.add(_buildNotificationCard(
+                          title: "$approxWaitTime wait",
+                          message: "$peopleInWaiting people remaining before it's your turn. Please get ready.",
+                        ));
+                      }
+
+                      // If no notifications were added
+                      if (notifications.isEmpty) {
+                        notifications.add(
+                          Padding(
+                            padding: EdgeInsets.only(top: 20.h),
+                            child: Center(
+                              child: Text(
+                                "No notifications yet.",
+                                style: TextStyle(fontSize: 16.sp, color: Colors.grey),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      return Column(children: notifications);
+                    },
                   ),
                 ),
               ),
             ),
+
             CustomFooterWithNav(userName: widget.userName, activeTab: 'home',),
           ],
         ),

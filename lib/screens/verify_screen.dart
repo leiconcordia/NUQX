@@ -4,27 +4,101 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'verified_page_screen.dart';
 import '../widgets/custom_footer.dart';
 import '../widgets/custom_header.dart';
-
+import 'package:flutter_application_1/DBHelper/mongodb.dart';
+import 'package:email_otp/email_otp.dart';
 
 
 
 class OTPVerificationScreen extends StatefulWidget {
-  final String userName;
-  const OTPVerificationScreen({super.key, required this.userName});
+  final String userName; // email
+final String studentID;
+final String firstName;
+final String? middleName; // nullable
+final String lastName;
+final String password;
+
+
+  const OTPVerificationScreen({
+    super.key,
+    required this.userName,
+    required this.studentID,
+    required this.firstName,
+    this.middleName, // ✅ optional
+    required this.lastName,
+    required this.password,
+  });
 
   @override
   _OTPVerificationScreenState createState() => _OTPVerificationScreenState();
 }
 
 class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
+
+  late EmailOTP myAuth;
   List<String> otp = ["", "", "", "", "", ""];
   int currentIndex = 0;
   int countdown = 60;
   late Timer timer;
+  bool isLoading = false;
+
+
 
   @override
   void initState() {
     super.initState();
+
+    // Step 1: Configure the package (no params needed)
+    EmailOTP.config(
+      appName: 'NUQX',
+      otpType: OTPType.numeric,
+      expiry: 100000,
+      emailTheme: EmailTheme.v4,
+      appEmail: 'leiconcordia2005@gmail.com',
+      otpLength: 6,
+    );
+
+    myAuth = EmailOTP();
+
+    sendOTP();        // Step 2: Send OTP with the user's email
+    startCountdown(); // Optional: countdown UI
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
+  }
+
+
+
+  Future<void> sendOTP() async {
+    try {
+      bool result = await EmailOTP.sendOTP(email: widget.userName); // ✅ provide email here
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result
+              ? "OTP sent to ${widget.userName}"
+              : "Failed to send OTP"),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${e.toString()}")),
+      );
+    }
+  }
+
+  void resendOTP() {
+    setState(() {
+      countdown = 60;
+      otp = ["", "", "", "", "", ""];
+      currentIndex = 0;
+    });
+    sendOTP();
     startCountdown();
   }
 
@@ -56,22 +130,48 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     }
   }
 
-  void onSubmit() {
-    if (otp.join().length == 6) {
-      Navigator.push(
+  Future<bool> verifyOTP(String otp) async {
+    return await EmailOTP.verifyOTP(otp: otp);
+  }
+
+
+  void onSubmit() async {
+    if (isLoading) return;
+    setState(() => isLoading = true);
+
+    final enteredOTP = otp.join();
+
+    bool isVerified = await verifyOTP(enteredOTP);
+    if (!isVerified) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("❌ Invalid OTP")),
+      );
+      return;
+    }
+    // ✅ Insert user into DB after OTP verification
+      Map<String, dynamic> newUser = {
+        "studentID": widget.studentID,
+        "firstName": widget.firstName,
+        "middleName": widget.middleName, // can be null
+        "lastName": widget.lastName,
+        "email": widget.userName,
+        "password": widget.password,
+        "role": "student",
+        "accountStatus": "verified",
+        "createdAt": DateTime.now().toIso8601String(),
+      };
+
+      await MongoDatabase.insertUser(newUser);
+
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => VerifiedPage(userName: widget.userName),
         ),
       );
     }
-  }
 
-  @override
-  void dispose() {
-    timer.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,9 +226,36 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
             ),
 
             SizedBox(height: 20.h),
-            Text(
-              "The Code Has Been Sent  Resend (${countdown}s)",
-              style: TextStyle(fontSize: 14.sp, color: Colors.black87),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "The code has been sent. ",
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.black87,
+                  ),
+                ),
+                countdown > 0
+                    ? Text(
+                  "Resend in ${countdown}s",
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.grey,
+                  ),
+                )
+                    : GestureDetector(
+                  onTap: resendOTP,
+                  child: Text(
+                    "Resend now",
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             SizedBox(height: 30.h),
@@ -214,3 +341,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     );
   }
 }
+
+
+
+

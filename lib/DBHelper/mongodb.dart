@@ -226,7 +226,7 @@ class MongoDatabase {
       });
 
       // Step 3: Subtract current user's queue from total
-      final othersWaiting = (totalWaiting > 0) ? totalWaiting - 1 : 0;
+      final othersWaiting = (totalWaiting > 0) ? totalWaiting : 0;
 
       // Step 4: Calculate approx wait time in minutes
       final totalMinutes = othersWaiting * 5;
@@ -250,8 +250,24 @@ class MongoDatabase {
       };
 
 
+    }
 
+  }
 
+  static Future<String> getUserQueueStatus(String email) async {
+    try {
+      final userQueue = await queueNumbersCollection.findOne(
+        where.eq('user', email),
+      );
+
+      if (userQueue != null && userQueue['status'] != null) {
+        return userQueue['status'];
+      } else {
+        return 'not found';
+      }
+    } catch (e) {
+      print("❌ Error fetching user queue status: $e");
+      return 'error';
     }
   }
 

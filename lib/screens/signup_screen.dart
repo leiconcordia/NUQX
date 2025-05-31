@@ -155,32 +155,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                             final hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
-                            Map<String, dynamic> newUser = {
-                              "studentID": studentID,
-                              "firstName": firstName,
-                              "middleName": middleName,
-                              "lastName": lastName,
-                              "email": email,
-                              "password": hashedPassword,
-                              "role": "student",
-                              "accountStatus": "not verified",
-                              "createdAt": DateTime.now().toIso8601String(),
-                            };
-
-                            await MongoDatabase.insertUser(newUser);
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Account created")),
-                            );
-
                             // Optionally navigate or clear fields
                             // Redirect to login screen after a short delay (optional for UX)
                             await Future.delayed(Duration(seconds: 1));
 
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (context) => LoginScreen()),
+                              MaterialPageRoute(
+                                builder: (context) => OTPVerificationScreen(
+                                  userName: email,
+                                  studentID: studentID,
+                                  firstName: firstName,
+                                  middleName: middleName.isNotEmpty ? middleName : null, // ✅ handle optional field
+                                  lastName: lastName,
+                                  password: hashedPassword,
+                                ),
+                              ),
                             );
+
                             _studentIDController.clear();
                             _firstNameController.clear();
                             _middleNameController.clear();
