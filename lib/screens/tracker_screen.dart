@@ -27,16 +27,18 @@ class _TrackerScreen extends State<TrackerScreen> {
   String? nowServingQueueNumber;
   int peopleInWaiting = 0;
   String approxWaitTime = "0 min";
-  String queueStatus = 'waiting';
+  String queueStatus = '-';
+
+
+
+
 
   @override
   void initState() {
     super.initState();
-    loadQueueInfo();
-   //_fetchNowServingNumber();
+    _loadData();
     _setupAutoRefresh();// Call async method after widget is initialized
-    loadWaitInfo();
-    _loadNowServing();
+
   }
   @override
   void dispose() {
@@ -46,7 +48,7 @@ class _TrackerScreen extends State<TrackerScreen> {
 
   void _setupAutoRefresh() {
     // Refresh data every 30 seconds
-    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _loadData();
     });
   }
@@ -60,7 +62,7 @@ class _TrackerScreen extends State<TrackerScreen> {
         loadQueueInfo(),
         _loadNowServing(),
         loadWaitInfo(),
-        QueueStatusInfo()
+        //QueueStatusInfo()
 
       ]);
     } catch (e) {
@@ -76,6 +78,7 @@ class _TrackerScreen extends State<TrackerScreen> {
       }
     }
   }
+
 
   Future<void> loadWaitInfo() async {
     final result = await MongoDatabase.getQueueWaitInfo(widget.userName);
@@ -99,58 +102,47 @@ class _TrackerScreen extends State<TrackerScreen> {
   }
 
 
-
   Future<void> loadQueueInfo() async {
-    final info = await MongoDatabase.getQueueInfoByEmail(widget.userName);
-    setState(() {
-      queueInfo = info;
-
-    });
-  }
-
-  Future<void> QueueStatusInfo() async {
-    final result = await MongoDatabase.getUserQueueInfoAndStatus(widget.userName);
-
-    if (mounted && result != null) {
+    try {
+      final info = await MongoDatabase.getUserQueueStatus(widget.userName);
       setState(() {
-        queueStatus = result['status'] ?? 'not found';
-        queueInfo = result;
+        queueInfo = info;
+        print("Status from DB: ${queueInfo?['status']}");
+
+
       });
-    } else {
+    } catch (e) {
+      print('Error loading queue info: $e');
       setState(() {
-        queueStatus = 'not found';
         queueInfo = null;
+        queueStatus = '';
       });
     }
   }
 
-
-
-
-
-  // Future<void> _fetchNowServingNumber() async {
-  //   try {
-  //     final number = await MongoDatabase.getNowServingQueueNumber(widget.transactionName);
-  //     if (mounted) {
-  //       setState(() {
-  //         nowServingQueue = number;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     if (mounted) {
-  //       setState(() {
-  //         nowServingQueue = null;
-  //       });
-  //     }
-  //     // Optionally show error message
-  //     debugPrint('Error fetching queue number: $e');
+  // Future<void> QueueStatusInfo() async {
+  //   final result = await MongoDatabase.getUserQueueInfoAndStatus(widget.userName);
+  //
+  //   if (mounted && result != null) {
+  //     setState(() {
+  //       queueStatus = result['status'] ?? 'not found';
+  //       userQueueNumber = result['generatedQueuenumber'] ?? '-';
+  //     });
+  //   } else {
+  //     setState(() {
+  //       queueStatus = 'not found';
+  //
+  //     });
   //   }
   // }
-  //
+
 
 
   @override
   Widget build(BuildContext context) {
+
+
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -182,44 +174,41 @@ class _TrackerScreen extends State<TrackerScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
                 child: Builder(
                   builder: (_) {
-                    if (isLoading) {
-                      // Show loading spinner or blank container to avoid flicker
-                      return Center(child: CircularProgressIndicator());
-                    } else if (queueInfo != null && queueInfo!.isNotEmpty) {
-                      // Your existing queue UI based on status
-                      if (queueStatus == 'processing') {
-                        return buildYourTurnBox(
-                          queueNumber: queueInfo?['generatedQueuenumber']?.toString() ?? '-',
-                        );
-                      } else if (queueStatus == 'done') {
-                        return _buildTransactionCompleteBox();
-                      } else {
+                    if (queueInfo != null && queueInfo!.isNotEmpty) {
+                      if (queueInfo?['status'] == 'processing') {
                         return Column(
                           children: [
-                            _buildProgressIndicator(),
+
+                            _buildProgressIndicator(peopleInWaiting: peopleInWaiting),
+                            buildYourTurnBox(
+                              queueNumber: queueInfo?['queueNumber']?.toString() ?? '-',
+                              windowNumber: queueInfo?['windowNumber']?.toString() ?? '-',
+                            ),
+
+
+                          ],
+                        );
+
+                      } else if (queueInfo?['status'] == 'waiting') {
+                        return Column(
+                          children: [
+                            _buildProgressIndicator(peopleInWaiting: peopleInWaiting),
                             SizedBox(height: 20.h),
                             _buildQueueInfoBox(),
                           ],
                         );
                       }
-                    } else {
-                      // No queue data after loading
-                      return Center(
-                        child: Text(
-                          "You're still \nnot in \nqueue!",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 50.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2D3A8C),
-                          ),
-                        ),
-                      );
                     }
+
+
+                    // Default case when queueInfo is null/empty or queueStatus doesn't match
+                    return _buildNotInQueue();
+
                   },
                 ),
               ),
             ),
+
 
             CustomFooterWithNav(
               userName: widget.userName,
@@ -235,15 +224,54 @@ class _TrackerScreen extends State<TrackerScreen> {
 
 
 
-  Widget _buildProgressIndicator() {
+  Widget _buildProgressIndicator({required int peopleInWaiting}) {
+    int activeIndex;
+
+    // Define how many circles should be filled
+    if (peopleInWaiting >= 4) {
+      activeIndex = 1;
+    } else if (peopleInWaiting == 3) {
+      activeIndex = 2;
+    } else if (peopleInWaiting == 2) {
+      activeIndex = 3;
+    } else if (peopleInWaiting == 1) {
+      activeIndex = 4;
+    } else if (peopleInWaiting == 0) {
+      activeIndex = 5;
+    } else {
+      activeIndex = -1; // none filled
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(5, (index) {
+        final isFilled = index <= activeIndex;
+
         return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4.w),
-          child: CircleAvatar(
-            radius: 10.r,
-            backgroundColor: index == 0 ? Colors.grey : Colors.grey.shade300,
+          padding: EdgeInsets.symmetric(horizontal: 6.w),
+          child: Column(
+            children: [
+              // Number above circle
+              Text(
+                '${index + 1}',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              // Circle with check or empty
+              CircleAvatar(
+                radius: 20.r,
+                backgroundColor: isFilled
+                    ? const Color(0xFF34A853) // Green when filled
+                    : Colors.grey.shade300,   // Gray when not
+                child: isFilled
+                    ? Icon(Icons.check, color: Colors.white, size: 14.sp)
+                    : null,
+              ),
+            ],
           ),
         );
       }),
@@ -252,16 +280,20 @@ class _TrackerScreen extends State<TrackerScreen> {
 
 
 
+
+
+
   Widget _buildQueueInfoBox() {
     return Container(
+      margin: EdgeInsets.only(left: 5, top: 20, right: 5, bottom: 10),
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 5,
             blurRadius: 5,
             offset: Offset(0, 2),
           ),
@@ -334,18 +366,52 @@ class _TrackerScreen extends State<TrackerScreen> {
     );
   }
 
-
-
-  Widget buildYourTurnBox({required String queueNumber}) {
+  Widget _buildNotInQueue() {
     return Container(
+      margin: EdgeInsets.only(left: 30, top: 20, right: 30, bottom: 200),
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 5,
+            blurRadius: 5,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          "You're still \nnot in \nqueue!",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 50.sp,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF2D3A8C),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
+  Widget buildYourTurnBox({
+    required String queueNumber,
+    required String windowNumber,
+  }) {
+    return Container(
+      margin: EdgeInsets.only(left: 30, top: 20, right: 30, bottom: 100),
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.5),
+            spreadRadius: 5,
             blurRadius: 5,
             offset: Offset(0, 2),
           ),
@@ -366,7 +432,7 @@ class _TrackerScreen extends State<TrackerScreen> {
           Text(
             "Your Queue Number",
             style: TextStyle(
-              fontSize: 16.sp,
+              fontSize: 20.sp,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
             ),
@@ -375,24 +441,38 @@ class _TrackerScreen extends State<TrackerScreen> {
           Text(
             queueNumber,
             style: TextStyle(
-              fontSize: 28.sp,
+              fontSize: 40.sp,
               fontWeight: FontWeight.bold,
               color: Color(0xFF2D3A8C),
             ),
           ),
           SizedBox(height: 16.h),
+
+          // Split into two Text widgets for better layout
           Text(
-            'Please proceed to counter "1"',
+            'Please proceed to counter',
             style: TextStyle(
-              fontSize: 16.sp,
+              fontSize: 20.sp,
               fontWeight: FontWeight.w600,
               color: Color(0xFF2D3A8C),
             ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 5.h),
+          Text(
+            windowNumber,
+            style: TextStyle(
+              fontSize: 35.sp,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2D3A8C),
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
+
 
 
   Widget _buildTransactionCompleteBox() {
@@ -432,6 +512,8 @@ class _TrackerScreen extends State<TrackerScreen> {
       ),
     );
   }
+
+
 
 
 }

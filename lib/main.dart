@@ -5,7 +5,7 @@ import 'package:flutter_application_1/screens/signup_screen.dart';
 import 'package:flutter_application_1/screens/login_screen.dart';
 import 'package:flutter_application_1/screens/location_screen.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
-
+import 'package:flutter_application_1/services/icon_service.dart';
 import 'package:mongo_dart/mongo_dart.dart';
 import 'dart:ui' as ui;
 
@@ -13,6 +13,7 @@ import 'dart:ui' as ui;
 void main() async {
     WidgetsFlutterBinding.ensureInitialized();
     await MongoDatabase.connect();
+    //await IconService.initialize();
     runApp(MyApp());
 
 

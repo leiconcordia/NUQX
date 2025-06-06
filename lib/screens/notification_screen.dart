@@ -20,7 +20,8 @@ class _NotificationsScreen extends State<NotificationsScreen> {
 
   int peopleInWaiting = 0;
   String approxWaitTime = "0 min";
-  String queueStatus = 'waiting'; // add at top of your State class
+  String queueStatus = 'waiting';
+  String windowNumber = '1';// add at top of your State class
 
 
   List<Widget> persistentNotifications = [];
@@ -48,16 +49,18 @@ class _NotificationsScreen extends State<NotificationsScreen> {
 
   Future<void> loadWaitInfo() async {
     final result = await MongoDatabase.getQueueWaitInfo(widget.userName);
-    final status = await MongoDatabase.getUserQueueStatus(widget.userName);
+    final statusResult = await MongoDatabase.getUserQueueStatus(widget.userName);
 
     if (mounted) {
       setState(() {
         peopleInWaiting = result["peopleInWaiting"];
         approxWaitTime = result["approxWaitTime"];
-        queueStatus = status;
+        queueStatus = statusResult['status'];
+        windowNumber = statusResult['windowNumber']; // ✅ store it
       });
     }
   }
+
 
 
   @override
@@ -95,10 +98,12 @@ class _NotificationsScreen extends State<NotificationsScreen> {
 
                       // Add notifications based on conditions
                       if (queueStatus == 'processing') {
-                        notifications.add(_buildNotificationCard(
-                          title: "It's your turn",
-                          message: "Please proceed to counter 1",
-                        ));
+                        notifications.add(
+                          _buildNotificationCard(
+                            title: "It's your turn",
+                            message: "Please proceed to counter $windowNumber",
+                          ),
+                        );
                       }
 
                       if (peopleInWaiting == 1) {

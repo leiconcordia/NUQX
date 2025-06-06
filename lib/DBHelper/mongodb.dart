@@ -260,45 +260,60 @@ class MongoDatabase {
 
   }
 
-  static Future<String> getUserQueueStatus(String email) async {
-    try {
-      final userQueue = await queueNumbersCollection.findOne(
-        where.eq('user', email),
-      );
+    static Future<Map<String, dynamic>> getUserQueueStatus(String email) async {
+      try {
+        final userQueue = await queueNumbersCollection.findOne(
+          where.eq('user', email).sortBy('createdAt', descending: true));
 
-      if (userQueue != null && userQueue['status'] != null) {
-        return userQueue['status'];
-      } else {
-        return 'not found';
-      }
-    } catch (e) {
-      print("❌ Error fetching user queue status: $e");
-      return 'error';
-    }
-  }
 
-  static Future<Map<String, dynamic>?> getUserQueueInfoAndStatus(String email) async {
-    try {
-      final latestQueue = await queueNumbersCollection
-          .find(where.eq('user', email).sortBy('createdAt', descending: true).limit(1))
-          .toList();
-
-      if (latestQueue.isNotEmpty) {
-        final doc = latestQueue.first;
-
+        if (userQueue != null && userQueue['status'] != null) {
+          return {
+            'status': userQueue['status'],
+            'windowNumber': userQueue['windowNumber'] ?? '',
+            'generatedQueuenumber' : userQueue['generatedQueuenumber'] ?? '',
+            'queueNumber': userQueue['generatedQueuenumber'] ?? '',
+          };
+        } else {
+          return {
+            'status': 'not found',
+            'windowNumber': '',
+          };
+        }
+      } catch (e) {
+        print("❌ Error fetching user queue status: $e");
         return {
-          'generatedQueuenumber': doc['generatedQueuenumber'],
-          'status': doc['status'],
-          'createdAt': doc['createdAt'], // optional: return timestamp too
+          'status': 'error',
+          'windowNumber': '',
         };
-      } else {
-        return null;
       }
-    } catch (e) {
-      print("❌ Error fetching latest user queue info: $e");
-      return null;
     }
-  }
+
+
+  //
+  // static Future<Map<String, dynamic>?> getUserQueueInfoAndStatus(String email) async {
+  //   try {
+  //     final latestQueue = await queueNumbersCollection
+  //         .find(where.eq('user', email).sortBy('createdAt', descending: true).limit(1))
+  //         .toList();
+  //
+  //     if (latestQueue.isNotEmpty) {
+  //       final doc = latestQueue.first;
+  //
+  //       return {
+  //         'queueNumber': doc['generatedQueuenumber'],
+  //         'status': doc['status'],
+  //         'windowNumber': doc['windowNumber'],
+  //         'createdAt': doc['createdAt'],
+  //       };
+  //     } else {
+  //       return null;
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error fetching latest user queue info: $e");
+  //     return null;
+  //   }
+  // }
+
 
 
 
