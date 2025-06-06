@@ -11,7 +11,6 @@ class MongoDatabase {
 
 
 
-
   static Future<void> connect() async {
     try {
       db = await Db.create(MONGO_CONN_URL);
@@ -27,6 +26,9 @@ class MongoDatabase {
       print("❌ Error connecting to MongoDB: $e");
     }
   }
+
+
+
 
 //signin
   static Future<Map<String, dynamic>?> getUserByEmail(String email) async {
@@ -151,6 +153,8 @@ class MongoDatabase {
     }
   }
 
+
+
   static Future<bool> hasActiveQueue(String email) async {
     try {
       final activeQueue = await queueNumbersCollection.findOne({
@@ -164,6 +168,8 @@ class MongoDatabase {
       return false; // assume no active queue on error
     }
   }
+
+
 
   static Future<String?> getNowServingForUser(String userName) async {
     try {
@@ -270,6 +276,31 @@ class MongoDatabase {
       return 'error';
     }
   }
+
+  static Future<Map<String, dynamic>?> getUserQueueInfoAndStatus(String email) async {
+    try {
+      final latestQueue = await queueNumbersCollection
+          .find(where.eq('user', email).sortBy('createdAt', descending: true).limit(1))
+          .toList();
+
+      if (latestQueue.isNotEmpty) {
+        final doc = latestQueue.first;
+
+        return {
+          'generatedQueuenumber': doc['generatedQueuenumber'],
+          'status': doc['status'],
+          'createdAt': doc['createdAt'], // optional: return timestamp too
+        };
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("❌ Error fetching latest user queue info: $e");
+      return null;
+    }
+  }
+
+
 
 
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'menu_screen.dart'; // Import MenuScreen
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
+import '../widgets/custom_header_with_title.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   final String userName;
@@ -71,96 +72,122 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("My Profile"),
-        backgroundColor: Color(0xFF2D3A8C),
-        centerTitle: true,
-      ),
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          children: [
+            // 🔷 Custom Header + Back Button
+            Stack(
               children: [
-                Center(
-                  child: CircleAvatar(
-                    radius: 50.r,
-                    backgroundImage: AssetImage('assets/profile_pic.png'),
-                  ),
+                CustomHeaderWithTitle(
+                  userName: widget.userName,
+                  title: "My Profile",
                 ),
-                SizedBox(height: 16.h),
-                _buildTextField("Student ID", studentIdController, enabled: false),
-                _buildTextField("Email", emailController, enabled: false),
-                _buildTextField("First Name", firstNameController),
-                _buildTextField("Middle Name", middleNameController),
-                _buildTextField("Last Name", lastNameController),
-
-                _buildDropdownField(
-                  label: "Program",
-                  selectedValue: selectedProgram,
-                  options: programOptions,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedProgram = value;
-                    });
-                  },
-                  hintText: "Enter Department",
-                ),
-                _buildDropdownField(
-                  label: "Year Level",
-                  selectedValue: selectedYearLevel,
-                  options: yearLevelOptions,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedYearLevel = value;
-                    });
-                  },
-                  hintText: "Enter Year Level",
-                ),
-
-                SizedBox(height: 16.h),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      await MongoDatabase.updateUserByEmail(
-                        emailController.text.trim(),
-                        firstNameController.text.trim(),
-                        middleNameController.text.trim(),
-                        lastNameController.text.trim(),
-                        selectedProgram!.trim(),
-                        selectedYearLevel!.trim(),
-                      );
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Profile updated successfully')),
-                      );
-
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MenuScreen(userName: widget.userName),
-                        ),
-                      );
+                Positioned(
+                  left: 14.w,
+                  top: 17.h,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () {
+                      Navigator.pop(context);
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF2D3A8C),
-                      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 40.w),
-                    ),
-                    child: Text(
-                      "Save",
-                      style: TextStyle(color: Colors.white, fontSize: 16.sp),
-                    ),
                   ),
                 ),
               ],
             ),
-          ),
+
+            // 🔷 Main Profile Content (Scrollable)
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: CircleAvatar(
+                        radius: 50.r,
+                        backgroundImage: AssetImage('assets/profile_pic.png'),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    _buildTextField("Student ID", studentIdController, enabled: false),
+                    _buildTextField("Email", emailController, enabled: false),
+                    _buildTextField("First Name", firstNameController),
+                    _buildTextField("Middle Name", middleNameController),
+                    _buildTextField("Last Name", lastNameController),
+
+                    _buildDropdownField(
+                      label: "Program",
+                      selectedValue: selectedProgram,
+                      options: programOptions,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedProgram = value;
+                        });
+                      },
+                      hintText: "Enter Department",
+                    ),
+                    _buildDropdownField(
+                      label: "Year Level",
+                      selectedValue: selectedYearLevel,
+                      options: yearLevelOptions,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedYearLevel = value;
+                        });
+                      },
+                      hintText: "Enter Year Level",
+                    ),
+
+                    SizedBox(height: 16.h),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          await MongoDatabase.updateUserByEmail(
+                            emailController.text.trim(),
+                            firstNameController.text.trim(),
+                            middleNameController.text.trim(),
+                            lastNameController.text.trim(),
+                            selectedProgram!.trim(),
+                            selectedYearLevel!.trim(),
+                          );
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Profile updated successfully')),
+                          );
+
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  MenuScreen(userName: widget.userName),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2D3A8C),
+                          padding: EdgeInsets.symmetric(
+                            vertical: 12.h,
+                            horizontal: 40.w,
+                          ),
+                        ),
+                        child: Text(
+                          "Save",
+                          style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: _buildFooterNav(context),
     );
   }
+
 
 
 

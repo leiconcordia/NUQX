@@ -27,6 +27,7 @@ class _TrackerScreen extends State<TrackerScreen> {
   String? nowServingQueueNumber;
   int peopleInWaiting = 0;
   String approxWaitTime = "0 min";
+  String queueStatus = 'waiting';
 
   @override
   void initState() {
@@ -45,7 +46,7 @@ class _TrackerScreen extends State<TrackerScreen> {
 
   void _setupAutoRefresh() {
     // Refresh data every 30 seconds
-    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       _loadData();
     });
   }
@@ -58,7 +59,8 @@ class _TrackerScreen extends State<TrackerScreen> {
       await Future.wait([
         loadQueueInfo(),
         _loadNowServing(),
-        loadWaitInfo()
+        loadWaitInfo(),
+        QueueStatusInfo()
 
       ]);
     } catch (e) {
@@ -98,14 +100,32 @@ class _TrackerScreen extends State<TrackerScreen> {
 
 
 
-
   Future<void> loadQueueInfo() async {
     final info = await MongoDatabase.getQueueInfoByEmail(widget.userName);
     setState(() {
       queueInfo = info;
-      isLoading = false;
+
     });
   }
+
+  Future<void> QueueStatusInfo() async {
+    final result = await MongoDatabase.getUserQueueInfoAndStatus(widget.userName);
+
+    if (mounted && result != null) {
+      setState(() {
+        queueStatus = result['status'] ?? 'not found';
+        queueInfo = result;
+      });
+    } else {
+      setState(() {
+        queueStatus = 'not found';
+        queueInfo = null;
+      });
+    }
+  }
+
+
+
 
 
   // Future<void> _fetchNowServingNumber() async {
@@ -129,7 +149,6 @@ class _TrackerScreen extends State<TrackerScreen> {
   //
 
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,63 +158,80 @@ class _TrackerScreen extends State<TrackerScreen> {
           children: [
             Stack(
               children: [
-                 CustomHeaderWithTitle(userName: widget.userName, title: "Queue Tracker"),
+                CustomHeaderWithTitle(userName: widget.userName, title: "Queue Tracker"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () {
+                      _refreshTimer?.cancel();
                       Navigator.pushAndRemoveUntil(
                         context,
                         noAnimationRoute(HomeScreen(userName: widget.userName)),
-                        (route) => false,
+                            (route) => false,
                       );
                     },
                   ),
                 ),
               ],
             ),
+
             Expanded(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    if (queueInfo != null && queueInfo!.isNotEmpty) ...[
-                      _buildProgressIndicator(),
-                      SizedBox(height: 20.h),
-                      _buildQueueInfoBox(),
-                    ] else ...[
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            "You're still \nnot in \nqueue!",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 50.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2D3A8C), // blue text
-                            ),
+                child: Builder(
+                  builder: (_) {
+                    if (isLoading) {
+                      // Show loading spinner or blank container to avoid flicker
+                      return Center(child: CircularProgressIndicator());
+                    } else if (queueInfo != null && queueInfo!.isNotEmpty) {
+                      // Your existing queue UI based on status
+                      if (queueStatus == 'processing') {
+                        return buildYourTurnBox(
+                          queueNumber: queueInfo?['generatedQueuenumber']?.toString() ?? '-',
+                        );
+                      } else if (queueStatus == 'done') {
+                        return _buildTransactionCompleteBox();
+                      } else {
+                        return Column(
+                          children: [
+                            _buildProgressIndicator(),
+                            SizedBox(height: 20.h),
+                            _buildQueueInfoBox(),
+                          ],
+                        );
+                      }
+                    } else {
+                      // No queue data after loading
+                      return Center(
+                        child: Text(
+                          "You're still \nnot in \nqueue!",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 50.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2D3A8C),
                           ),
                         ),
-                      ),
-                    ],
-                  ],
+                      );
+                    }
+                  },
                 ),
               ),
             ),
 
-
-
             CustomFooterWithNav(
               userName: widget.userName,
-              activeTab: 'tracker',),
+              activeTab: 'tracker',
+            ),
           ],
         ),
       ),
     );
   }
+
+
 
 
 
@@ -276,6 +312,8 @@ class _TrackerScreen extends State<TrackerScreen> {
     );
   }
 
+
+
   Widget _buildQueueInfo(String value, String label) {
     return Column(
       children: [
@@ -295,4 +333,108 @@ class _TrackerScreen extends State<TrackerScreen> {
       ],
     );
   }
+
+
+
+  Widget buildYourTurnBox({required String queueNumber}) {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            "It's your turn",
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            "Your Queue Number",
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
+          SizedBox(height: 5.h),
+          Text(
+            queueNumber,
+            style: TextStyle(
+              fontSize: 28.sp,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2D3A8C),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'Please proceed to counter "1"',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2D3A8C),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildTransactionCompleteBox() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Big blue circle with check icon
+          Container(
+            width: 200.w,
+            height: 200.w,
+
+            child: Center(
+              child: Icon(
+                Icons.check_circle,
+                color: Color(0xFF2D3A8C),
+                size: 150.sp,
+              ),
+            ),
+          ),
+
+          SizedBox(height: 24.h),
+
+          // Transaction complete text
+          Text(
+            "Transaction Complete",
+            style: TextStyle(
+              fontSize: 25.sp,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2D3A8C),
+            ),
+          ),
+
+          SizedBox(height: 32.h),
+
+        ],
+      ),
+    );
+  }
+
+
 }
+
+
+

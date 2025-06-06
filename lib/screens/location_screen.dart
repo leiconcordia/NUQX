@@ -1,36 +1,167 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/custom_footer.dart';
-import 'signup_screen.dart';
+import 'home_screen.dart';
 
 class LocationScreen extends StatefulWidget {
-  const LocationScreen({super.key});
+  final String userName;
+
+  const LocationScreen({super.key, required this.userName});
 
   @override
   _LocationScreenState createState() => _LocationScreenState();
 }
 
 class _LocationScreenState extends State<LocationScreen> {
-  void _simulateLocationCheck() {
-    _showServiceAreaDialog();
+  bool locationEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAndHandleLocation();
   }
+
+  Future<void> _checkAndHandleLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (serviceEnabled &&
+        (permission == LocationPermission.always ||
+            permission == LocationPermission.whileInUse)) {
+      setState(() {
+        locationEnabled = true;
+      });
+
+      // Show loading and get location
+      await _getUserLocation();
+    }
+  }
+
+  void showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text(
+                  "Getting your location...",
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+
+  Future<void> _checkLocationStatus() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (serviceEnabled &&
+        (permission == LocationPermission.always ||
+            permission == LocationPermission.whileInUse)) {
+      setState(() {
+        locationEnabled = true;
+      });
+    }
+  }
+
+  Future<void> _getUserLocation() async {
+    showLoadingDialog(context);
+    try {
+      // Request permission
+      LocationPermission permission = await Geolocator.requestPermission();
+
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        Navigator.of(context).pop(); // Dismiss loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location permission is required.')),
+        );
+        return;
+      }
+
+      final LocationSettings locationSettings = LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 100,
+      );
+
+      Position position = await Geolocator.getCurrentPosition(locationSettings: locationSettings);
+
+      // Dismiss the loading dialog
+      Navigator.of(context).pop();
+
+      //11.1353796, Lng 124.551826 akoa loc
+     // 11.135376380746077, 124.55192934141948 balay
+      //11.13495786420349, 124.55304600729069  test sa layu
+
+
+      // Office coordinates
+      const double officeLat = 11.13537967;
+      const double officeLng = 124.551826;
+
+      // Calculate distance
+      double distanceInMeters = Geolocator.distanceBetween(
+        officeLat,
+        officeLng,
+        position.latitude,
+        position.longitude,
+      );
+
+      // Output
+      print('📍 User location: Lat ${position.latitude}, Lng ${position.longitude}');
+      print('📏 Distance from office: ${distanceInMeters.toStringAsFixed(2)} meters');
+
+      if (distanceInMeters <= 100) {
+        print('✅ You are within range (100 meters)');
+        _showServiceAreaDialog();
+      } else {
+        print('❌ You are outside the allowed range');
+        _showOutOfRangeDialog(distanceInMeters); // <-- make sure this is called
+      }
+
+    } catch (e) {
+      Navigator.of(context).pop(); // Ensure dialog is dismissed on error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error getting location: $e')),
+      );
+    }
+  }
+
 
   void _showServiceAreaDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
           title: const Text("Service Area Confirmation"),
           content: const Text(
-            "You are within the service area. You can now join the queue.",
-          ),
+              "You are within the service area. You can now join the queue."),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        HomeScreen(userName: widget.userName),
+                  ),
                 );
               },
               child: const Text("Continue"),
@@ -40,6 +171,29 @@ class _LocationScreenState extends State<LocationScreen> {
       },
     );
   }
+
+  void _showOutOfRangeDialog(double distanceInMeters) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Out of Range"),
+          content: Text(
+              "You are not within the service area.\n"
+                  "Distance from office: ${distanceInMeters.toStringAsFixed(2)} meters.\n"
+                  "Please get closer to the office."
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -71,13 +225,11 @@ class _LocationScreenState extends State<LocationScreen> {
                       style: TextStyle(fontSize: 16),
                     ),
                     const SizedBox(height: 32),
-
-                    // ✅ Clean, modern button
                     SizedBox(
                       width: double.infinity,
                       height: 55,
                       child: ElevatedButton(
-                        onPressed: _simulateLocationCheck,
+                        onPressed: locationEnabled ? null : _getUserLocation,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2D3A8C),
                           foregroundColor: Colors.white,
@@ -86,9 +238,11 @@ class _LocationScreenState extends State<LocationScreen> {
                           ),
                           elevation: 0,
                         ),
-                        child: const Text(
-                          'Allow Location Access',
-                          style: TextStyle(
+                        child: Text(
+                          locationEnabled
+                              ? 'Location Already Enabled'
+                              : 'Allow Location Access',
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),

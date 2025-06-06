@@ -34,6 +34,7 @@ final String password;
 
 class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
+
   late EmailOTP myAuth;
   List<String> otp = ["", "", "", "", "", ""];
   int currentIndex = 0;
@@ -46,12 +47,16 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   @override
   void initState() {
     super.initState();
+    // Unfocus any text fields to prevent keyboard from opening
+    Future.delayed(Duration.zero, () {
+      FocusScope.of(context).unfocus();
+    });
 
     // Step 1: Configure the package (no params needed)
     EmailOTP.config(
       appName: 'NUQX',
       otpType: OTPType.numeric,
-      expiry: 100000,
+      expiry: 60000,
       emailTheme: EmailTheme.v4,
       appEmail: 'leiconcordia2005@gmail.com',
       otpLength: 6,
@@ -145,10 +150,11 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     if (!isVerified) {
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Invalid OTP")),
+        const SnackBar(content: Text("Invalid OTP")),
       );
       return;
     }
+    await Future.delayed(const Duration(seconds: 3));
     // ✅ Insert user into DB after OTP verification
       Map<String, dynamic> newUser = {
         "studentID": widget.studentID,
@@ -177,9 +183,13 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+
         child: Column(
           children: [
-            const CustomHeader(title: "Verify"), // 🏷 Using Custom Header
+            const CustomHeader(
+              title: "Verify",
+              showBackButton: true, // This enables the back button
+            ),
             SizedBox(height: 30.h),
             Text(
               "Enter Verification Code",
@@ -193,7 +203,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
             Text(
               "Enter the OTP sent to \n${widget.userName}!",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14.sp, color: Colors.black54),
+              style: TextStyle(fontSize: 12.sp, color: Colors.black54),
             ),
             SizedBox(height: 20.h),
 
@@ -225,7 +235,8 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
               }),
             ),
 
-            SizedBox(height: 20.h),
+
+            SizedBox(height: 19.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -258,54 +269,54 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
               ],
             ),
 
-            SizedBox(height: 30.h),
+          // Number Pad
+          Expanded(
+            child: GridView.builder(
+              padding: EdgeInsets.symmetric(horizontal: 40.w),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 1.5,
+              ),
+              itemCount: 12,
+              itemBuilder: (context, index) {
+                if (index == 9) {
+                  return const SizedBox(); // Empty space
+                } else if (index == 10) {
+                  return _buildNumberButton("0");
+                } else if (index == 11) {
+                  return _buildActionButton(Icons.backspace, onBackspace);
+                } else {
+                  return _buildNumberButton("${index + 1}");
+                }
+              },
+            ),
+          ),
 
-            // Number Pad
-            Expanded(
-              child: GridView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 40.w),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  childAspectRatio: 1.5,
-                ),
-                itemCount: 12,
-                itemBuilder: (context, index) {
-                  if (index == 9) {
-                    return const SizedBox(); // Empty space
-                  } else if (index == 10) {
-                    return _buildNumberButton("0");
-                  } else if (index == 11) {
-                    return _buildActionButton(Icons.backspace, onBackspace);
-                  } else {
-                    return _buildNumberButton("${index + 1}");
-                  }
-                },
+          // Submit Button
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 20.h),
+            child: ElevatedButton(
+              onPressed: onSubmit,
+              style: ElevatedButton.styleFrom(
+                shape: const CircleBorder(),
+                backgroundColor: const Color(0xFF2D3A8C),
+                padding: EdgeInsets.all(18.w),
+              ),
+              child: Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+                size: 24.sp,
               ),
             ),
+          ),
 
-            // Submit Button
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 20.h),
-              child: ElevatedButton(
-                onPressed: onSubmit,
-                style: ElevatedButton.styleFrom(
-                  shape: const CircleBorder(),
-                  backgroundColor: const Color(0xFF2D3A8C),
-                  padding: EdgeInsets.all(18.w),
-                ),
-                child: Icon(
-                  Icons.arrow_forward,
-                  color: Colors.white,
-                  size: 24.sp,
-                ),
-              ),
-            ),
 
-            const CustomFooter(), // 📌 Using Custom Footer
+            const CustomFooter(),// 📌 Using Custom Footer
           ],
         ),
       ),
     );
+
   }
 
   Widget _buildNumberButton(String number) {

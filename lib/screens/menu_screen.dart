@@ -5,6 +5,7 @@ import '../widgets/custom_header_with_title.dart';
 import '../widgets/custom_footer_with_nav.dart'; // Updated footer with navigation
 import 'editprofile_screen.dart';
 import 'location_screen.dart';
+import 'login_screen.dart';
 import '../utils/custom_page_route.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
@@ -37,7 +38,7 @@ class _MenuScreenState extends State<MenuScreen> {
     }
   }
 
-  @override
+
   @override
   Widget build(BuildContext context) {
     if (user == null) {
@@ -178,7 +179,7 @@ class _MenuScreenState extends State<MenuScreen> {
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const LocationScreen(),
+                    builder: (context) => LoginScreen(),
                   ),
                   (route) => false,
                 );

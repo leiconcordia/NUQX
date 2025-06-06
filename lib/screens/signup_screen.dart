@@ -159,7 +159,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             // Redirect to login screen after a short delay (optional for UX)
                             await Future.delayed(Duration(seconds: 1));
 
-                            Navigator.pushReplacement(
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => OTPVerificationScreen(

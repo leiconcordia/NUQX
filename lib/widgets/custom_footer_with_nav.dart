@@ -61,6 +61,7 @@ class CustomFooterWithNav extends StatelessWidget {
             isActive: activeTab == 'menu',
             onTap:
                 () =>
+
                     _navigateToScreen(context, MenuScreen(userName: userName)),
           ),
         ],

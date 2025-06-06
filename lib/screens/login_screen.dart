@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/custom_footer.dart';
 import '../widgets/custom_header.dart';
 import 'signup_screen.dart';
+import 'location_screen.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
@@ -94,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                               _navigateToScreen(
                                      context,
-                                      HomeScreen(userName: user['email']),
+                                LocationScreen(userName: user['email']),
                               );
 
                               // // Check account verification status
@@ -119,12 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               );
                             }
                           },
-
-
-
-
-
-
 
                           child: Text(
                             "Log in",

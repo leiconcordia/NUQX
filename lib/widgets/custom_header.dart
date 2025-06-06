@@ -3,8 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CustomHeader extends StatelessWidget {
   final String title;
+  final bool showBackButton;
 
-  const CustomHeader({super.key, required this.title});
+  const CustomHeader({super.key, required this.title, this.showBackButton = false,});
 
   @override
   Widget build(BuildContext context) {
@@ -20,14 +21,30 @@ class CustomHeader extends StatelessWidget {
           ),
         ),
       ),
-      child: Text(
-        title,
-        textAlign: TextAlign.center, // Ensures text is always centered
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 20.sp,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (showBackButton)
+            Positioned(
+              left: 0,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back,
+                  color: Colors.white,
+                  size: 24.sp,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
