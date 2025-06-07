@@ -136,7 +136,7 @@ class MongoDatabase {
       final result = await queueNumbersCollection.findOne(
         where
             .eq('user', email)
-            .eq('status', 'waiting')
+            .eq('status', 'Waiting')
             .sortBy('createdAt', descending: true),
       );
 
@@ -159,7 +159,7 @@ class MongoDatabase {
     try {
       final activeQueue = await queueNumbersCollection.findOne({
         'user': email,
-        'status': {'\$in': ['waiting', 'processing']},
+        'status': {'\$in': ['Waiting', 'Processing']},
       });
 
       return activeQueue != null; // true if active queue exists
@@ -175,7 +175,7 @@ class MongoDatabase {
     try {
       // 1. Find user's waiting queue
       final userQueue = await queueNumbersCollection.findOne(
-        where.eq('user', userName).eq('status', 'waiting'),
+        where.eq('user', userName).eq('status', 'Waiting'),
       );
 
       if (userQueue == null) {
@@ -212,7 +212,7 @@ class MongoDatabase {
     try {
       // Step 1: Get user's queue with status "waiting"
       final userQueue = await queueNumbersCollection.findOne(
-        where.eq('user', email).eq('status', 'waiting'),
+        where.eq('user', email).eq('status', 'Waiting'),
       );
 
       if (userQueue == null || userQueue['transactionName'] == null) {
@@ -228,7 +228,7 @@ class MongoDatabase {
       // Step 2: Count all waiting queues with the same transactionName
       final totalWaiting = await queueNumbersCollection.count({
         'transactionName': transactionName,
-        'status': 'waiting',
+        'status': 'Waiting',
       });
 
       // Step 3: Subtract current user's queue from total

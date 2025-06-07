@@ -175,7 +175,7 @@ class _TrackerScreen extends State<TrackerScreen> {
                 child: Builder(
                   builder: (_) {
                     if (queueInfo != null && queueInfo!.isNotEmpty) {
-                      if (queueInfo?['status'] == 'processing') {
+                      if (queueInfo?['status'] == 'Processing') {
                         return Column(
                           children: [
 

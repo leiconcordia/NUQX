@@ -181,7 +181,7 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
               'transactionID': widget.transactionID,
               'generatedQueuenumber': generatedNumber,
               'isPriority': false,
-              'status': 'waiting',
+              'status': 'Waiting',
               'windowNumber': '',
               'createdAt': DateTime.now().toUtc(),
               'updatedAt': '',
