@@ -140,15 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   RegistrarScreen(userName: widget.userName),
                                 ),
                           ),
-                          _buildCategoryTile(
-                            title: "Other Concern",
-                            icon: Icons.question_mark_outlined, // Changed icon
-                            onTap:
-                                () => _navigateToScreen(
-                                  context,
-                                  OtherConcernFormScreen(userName: widget.userName),
-                                ),
-                          ),
+
                         ],
                       ),
 

@@ -95,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                               _navigateToScreen(
                                      context,
-                                LocationScreen(userName: user['email']),
+                                HomeScreen(userName: user['email']),
                               );
 
                               // // Check account verification status
@@ -170,6 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
 
   void _navigateToScreen(BuildContext context, Widget screen) {
     Navigator.pushReplacement(
