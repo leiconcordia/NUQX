@@ -111,10 +111,12 @@ class _LocationScreenState extends State<LocationScreen> {
      // 11.135376380746077, 124.55192934141948 balay
       //11.13495786420349, 124.55304600729069  test sa layu
 
+      //NUP
+      //14.604354869275541, 120.99453311592958
 
       // Office coordinates
-      const double officeLat = 11.13537967;
-      const double officeLng = 124.551826;
+      const double officeLat = 14.604354869275541;
+      const double officeLng = 120.99453311592958;
 
       // Calculate distance
       double distanceInMeters = Geolocator.distanceBetween(

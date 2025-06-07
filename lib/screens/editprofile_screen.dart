@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'menu_screen.dart'; // Import MenuScreen
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import '../widgets/custom_header_with_title.dart';
+import '../widgets/custom_footer_with_nav.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   final String userName;
@@ -181,10 +182,15 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 ),
               ),
             ),
-          ],
+
+        CustomFooterWithNav(
+        userName: widget.userName, activeTab: 'menu',
+        ),
+        ],
+
         ),
       ),
-      bottomNavigationBar: _buildFooterNav(context),
+
     );
   }
 
@@ -243,37 +249,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     );
   }
 
-  Widget _buildFooterNav(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 70.h,
-      decoration: BoxDecoration(
-        color: Color(0xFF2D3A8C),
-        border: Border(top: BorderSide(color: Color(0xFFFFD700), width: 3)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavButton(context, Icons.assignment, "Form"),
-          _buildNavButton(context, Icons.play_arrow, "Tracker"),
-          _buildNavButton(context, Icons.menu, "Menu"),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildNavButton(BuildContext context, IconData icon, String label) {
-    return IconButton(
-      onPressed: () {
-        // TODO: Implement navigation
-      },
-      icon: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 24.sp),
-          Text(label, style: TextStyle(color: Colors.white, fontSize: 12.sp)),
-        ],
-      ),
-    );
-  }
+
+
 }
