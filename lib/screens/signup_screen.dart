@@ -7,6 +7,7 @@ import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter_application_1/screens/verify_screen.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
+
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -40,6 +41,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(

@@ -8,6 +8,7 @@ import 'location_screen.dart';
 import 'login_screen.dart';
 import '../utils/custom_page_route.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MenuScreen extends StatefulWidget {
   final String userName;
@@ -174,7 +175,10 @@ class _MenuScreenState extends State<MenuScreen> {
               ),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async{
+
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear(); // ✅ Clear login state
                 // Navigate to Login Screen and clear backstack
                 Navigator.pushAndRemoveUntil(
                   context,

@@ -3,12 +3,14 @@ import 'package:flutter_application_1/screens/verified_page_screen.dart';
 import 'package:flutter_application_1/screens/verify_screen.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:location/location.dart';
 import '../widgets/custom_footer.dart';
 import '../widgets/custom_header.dart';
 import 'signup_screen.dart';
 import 'location_screen.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
@@ -91,28 +94,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             bool passwordMatch = BCrypt.checkpw(password, user['password']);
 
                             if (passwordMatch) {
+
                               await MongoDatabase.verifyAccountByEmail(email);
+
+                              await _saveLoginState(user['email']);
 
                               _navigateToScreen(
                                      context,
-                                HomeScreen(userName: user['email']),
+                                LocationScreen(userName: user['email']),
+                                //HomeScreen(userName: user['email']),
                               );
-
-                              // // Check account verification status
-                              // if (user['AccountStatus'] == 'verified') {
-                              //   // Account is verified, navigate to HomeScreen
-                              //   _navigateToScreen(
-                              //     context,
-                              //     HomeScreen(userName: user['email']),
-                              //   );
-                              // } else {
-                              //   // Account is not verified, navigate to OTPVerificationScreen
-                              //   _navigateToScreen(
-                              //     context,
-                              //     OTPVerificationScreen(
-                              //         userName: user['email']),
-                              //   );
-                              // }
 
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -170,6 +161,15 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+
+  Future<void> _saveLoginState(String userName) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('userName', userName);
+  }
+
+
 
 
   void _navigateToScreen(BuildContext context, Widget screen) {
