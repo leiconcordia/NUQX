@@ -56,7 +56,7 @@ class _NotificationsScreen extends State<NotificationsScreen> {
         peopleInWaiting = result["peopleInWaiting"];
         approxWaitTime = result["approxWaitTime"];
         queueStatus = statusResult['status'];
-        windowNumber = statusResult['windowNumber']; // ✅ store it
+        windowNumber = statusResult['windowNumber'];
       });
     }
   }
@@ -97,7 +97,7 @@ class _NotificationsScreen extends State<NotificationsScreen> {
                       List<Widget> notifications = [];
 
                       // Add notifications based on conditions
-                      if (queueStatus == 'processing') {
+                      if (queueStatus == 'Processing') {
                         notifications.add(
                           _buildNotificationCard(
                             title: "It's your turn",

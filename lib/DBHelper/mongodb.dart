@@ -191,7 +191,7 @@ class MongoDatabase {
         where
             .eq('transactionName', transactionName)
             .eq('department', department)
-            .eq('status', 'processing'),
+            .eq('status', 'Processing'),
       );
 
       if (processingQueue != null) {
@@ -287,6 +287,15 @@ class MongoDatabase {
         };
       }
     }
+
+  // Save base64 profile image to the user's document
+  static Future<void> setProfileImage(String email, String base64Image) async {
+    final collection = db.collection('users');
+    await collection.updateOne(
+      where.eq('email', email),
+      modify.set('profileImage', base64Image),
+    );
+  }
 
 
   //

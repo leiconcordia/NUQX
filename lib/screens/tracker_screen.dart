@@ -189,7 +189,7 @@ class _TrackerScreen extends State<TrackerScreen> {
                           ],
                         );
 
-                      } else if (queueInfo?['status'] == 'waiting') {
+                      } else if (queueInfo?['status'] == 'Waiting') {
                         return Column(
                           children: [
                             _buildProgressIndicator(peopleInWaiting: peopleInWaiting),

@@ -9,6 +9,10 @@ import 'login_screen.dart';
 import '../utils/custom_page_route.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+
 
 class MenuScreen extends StatefulWidget {
   final String userName;
@@ -38,6 +42,56 @@ class _MenuScreenState extends State<MenuScreen> {
       });
     }
   }
+
+  void _pickAndUploadImage(BuildContext context) async {
+    final picker = ImagePicker();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Wrap(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.camera_alt),
+            title: const Text('Take Photo'),
+            onTap: () async {
+              Navigator.pop(context);
+              final image = await picker.pickImage(source: ImageSource.camera);
+              await _handleImageSelection(image, context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library),
+            title: const Text('Choose from Gallery'),
+            onTap: () async {
+              Navigator.pop(context);
+              final image = await picker.pickImage(source: ImageSource.gallery);
+              await _handleImageSelection(image, context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleImageSelection(XFile? image, BuildContext context) async {
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      final base64Image = base64Encode(bytes);
+
+      await MongoDatabase.setProfileImage(widget.userName, base64Image);
+
+      // Refresh user data
+      await fetchUserData();
+
+      // Show SnackBar after rebuild
+      Future.delayed(Duration.zero, () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profile picture updated!")),
+        );
+      });
+    }
+  }
+
 
 
   @override
@@ -72,7 +126,6 @@ class _MenuScreenState extends State<MenuScreen> {
               ],
             ),
 
-            // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -80,12 +133,19 @@ class _MenuScreenState extends State<MenuScreen> {
                   children: [
                     SizedBox(height: 20.h),
 
-                    // Profile Image
-                    CircleAvatar(
-                      radius: 50.r,
-                      backgroundImage: AssetImage('assets/profile_image.png'),
+                    GestureDetector(
+                      onTap: () => _pickAndUploadImage(context),
+                      child: CircleAvatar(
+                        radius: 50.r,
+                        backgroundImage: user!['profileImage'] != null
+                            ? MemoryImage(base64Decode(user!['profileImage']))
+                            : AssetImage('assets/profile_image.png') as ImageProvider,
+
+                      ),
                     ),
-                    SizedBox(height: 10.h),
+
+
+
 
                     // Name
                     Text(
@@ -134,6 +194,7 @@ class _MenuScreenState extends State<MenuScreen> {
               ),
             ),
 
+
             // Footer with Navigation
             CustomFooterWithNav(userName: widget.userName, activeTab: 'menu'),
           ],
@@ -141,6 +202,10 @@ class _MenuScreenState extends State<MenuScreen> {
       ),
     );
   }
+
+
+
+
 
   Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
     return ListTile(

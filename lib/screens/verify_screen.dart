@@ -165,6 +165,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
         "password": widget.password,
         "role": "student",
         "accountStatus": "verified",
+        "profileImage": null,
         "createdAt": DateTime.now().toIso8601String(),
       };
 
