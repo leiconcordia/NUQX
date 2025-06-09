@@ -129,7 +129,7 @@ class _AccountingScreen extends State<AccountingScreen> {
                           return buildTransactionCard(transaction, () {
                             Navigator.push(
                               context,
-                              noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'],  transactionID: transaction['transactionID'], department : 'accounting')),
+                              noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'],  transactionID: transaction['transactionID'], department : 'accounting', TransactionAdmin: 'adminName')),
                             );
                           });
                         }).toList(),

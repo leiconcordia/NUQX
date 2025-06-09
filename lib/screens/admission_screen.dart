@@ -124,7 +124,8 @@ class _AdmissionScreen extends State<AdmissionScreen> {
                                 userName: widget.userName,
                                 transactionConcern: transaction['name'],
                                 transactionID: transaction['transactionID'],
-                                department: 'admission')),
+                                department: 'admission',
+                                TransactionAdmin: 'adminName',))
                           );
                         });
                       }).toList(),

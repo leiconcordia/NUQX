@@ -12,8 +12,9 @@ class ConfirmationTicketScreen extends StatefulWidget {
   final String transactionConcern;
   final String transactionID;
   final String department;
+  final String TransactionAdmin;
 
-  const ConfirmationTicketScreen({super.key, required this.userName, required this.transactionConcern, required this.transactionID, required this.department});
+  const ConfirmationTicketScreen({super.key, required this.userName, required this.transactionConcern, required this.transactionID, required this.department, required this.TransactionAdmin});
   @override
   State<ConfirmationTicketScreen> createState() => _ConfirmationTicketScreen();
 }
@@ -190,6 +191,7 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
               'generatedQueuenumber': generatedNumber,
               'isPriority': false,
               'status': 'Waiting',
+              'departmentAdmin' : widget.TransactionAdmin,
               'windowNumber': '',
               'createdAt': DateTime.now().toUtc(),
               'updatedAt': '',

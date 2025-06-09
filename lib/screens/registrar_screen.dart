@@ -113,7 +113,7 @@ class _RegistrarScreen extends State<RegistrarScreen> {
                         return buildTransactionCard(transaction, () {
                           Navigator.push(
                             context,
-                            noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'],  transactionID: transaction['transactionID'], department : 'registrar')),
+                            noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'],  transactionID: transaction['transactionID'], department : 'registrar', TransactionAdmin: transaction['adminName'])),
                           );
                         });
                       }).toList(),
