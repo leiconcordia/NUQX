@@ -4,6 +4,10 @@ import 'menu_screen.dart'; // Import MenuScreen
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import '../widgets/custom_header_with_title.dart';
 import '../widgets/custom_footer_with_nav.dart';
+import 'package:flutter_application_1/utils/icon_snackbar.dart';
+import 'dart:convert';
+
+import 'package:image_picker/image_picker.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   final String userName;
@@ -30,6 +34,58 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   }
 
+  void _pickAndUploadImage(BuildContext context) async {
+    final picker = ImagePicker();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Wrap(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.camera_alt),
+            title: const Text('Take Photo'),
+            onTap: () async {
+              Navigator.pop(context);
+              final image = await picker.pickImage(source: ImageSource.camera);
+              await _handleImageSelection(image, context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library),
+            title: const Text('Choose from Gallery'),
+            onTap: () async {
+              Navigator.pop(context);
+              final image = await picker.pickImage(source: ImageSource.gallery);
+              await _handleImageSelection(image, context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleImageSelection(XFile? image, BuildContext context) async {
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      final base64Image = base64Encode(bytes);
+
+      await MongoDatabase.setProfileImage(widget.userName, base64Image);
+
+      // Refresh user data
+      await fetchUserData();
+
+      // Show SnackBar after rebuild
+      Future.delayed(Duration.zero, () {
+        IconSnackBar.show(
+          context: context,
+          snackBarType: SnackBarType.success,
+          label: 'Profile picture updated!',
+        );
+      });
+    }
+  }
+
+
 
 
   Future<void> fetchUserData() async {
@@ -46,8 +102,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         middleNameController.text = user!['middleName'] ?? '';
 
         // Fetch program and year level from DB if they exist
-        selectedProgram = user!['program'];
-        selectedYearLevel = user!['yearLevel'];
+        selectedProgram = programOptions.contains(user!['program']?.toString().trim())
+            ? user!['program'].toString().trim()
+            : null;
+
+        selectedYearLevel = yearLevelOptions.contains(user!['yearLevel']?.toString().trim())
+            ? user!['yearLevel'].toString().trim()
+            : null;
+
       });
     }
   }
@@ -55,7 +117,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   String? selectedYearLevel;
 
   final List<String> programOptions = ['BSIT', 'BSHM', 'BSCS', 'BSTM'];
-  final List<String> yearLevelOptions = ['1', '2', '3', '4'];
+  final List<String> yearLevelOptions = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 
   TextEditingController studentIdController = TextEditingController();
   TextEditingController emailController = TextEditingController();
@@ -105,9 +167,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
-                      child: CircleAvatar(
-                        radius: 50.r,
-                        backgroundImage: AssetImage('assets/profile_pic.png'),
+                      child: GestureDetector(
+                        onTap: () => _pickAndUploadImage(context),
+                        child: CircleAvatar(
+                          radius: 50.r,
+                          backgroundImage: (user?['profileImage'] != null)
+                              ? MemoryImage(base64Decode(user!['profileImage']))
+                              : const AssetImage('assets/profile_image.png') as ImageProvider,
+                        ),
                       ),
                     ),
                     SizedBox(height: 16.h),
@@ -153,8 +220,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                             selectedYearLevel!.trim(),
                           );
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Profile updated successfully')),
+                          IconSnackBar.show(
+                            context: context,
+                            snackBarType: SnackBarType.success,
+                            label: 'Profile updated!',
                           );
 
                           Navigator.pushReplacement(

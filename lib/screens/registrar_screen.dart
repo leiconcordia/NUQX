@@ -8,6 +8,7 @@ import 'enrollment_form_screen.dart';
 import 'requestdocuments_form_screen.dart';
 import 'home_screen.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class RegistrarScreen extends StatefulWidget {
   final String userName;
@@ -131,8 +132,12 @@ class _RegistrarScreen extends State<RegistrarScreen> {
     );
   }
 
-  Widget buildTransactionCard(Map<String, dynamic> transaction,
-      VoidCallback onTap) {
+
+
+  Widget buildTransactionCard(Map<String, dynamic> transaction, VoidCallback onTap) {
+    final String iconName = transaction['icon'] ?? '';
+    final String assetPath = 'assets/icons/mobile-icons/$iconName.svg';
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -152,8 +157,19 @@ class _RegistrarScreen extends State<RegistrarScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.newspaper, size: 40.sp, color: Colors.white),
-            // You can map from transaction['icon'] if needed
+            SvgPicture.asset(
+              assetPath,
+              width: 40.sp,
+              height: 40.sp,
+              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              placeholderBuilder: (context) => const CircularProgressIndicator(),
+              // Fallback if asset is missing or invalid
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.newspaper,
+                size: 40.sp,
+                color: Colors.white,
+              ),
+            ),
             SizedBox(height: 8.h),
             Text(
               transaction['name'] ?? 'Transaction',

@@ -6,6 +6,7 @@ import 'login_screen.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter_application_1/screens/verify_screen.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
+import 'package:flutter_application_1/utils/icon_snackbar.dart';
 
 
 class SignUpScreen extends StatefulWidget {
@@ -100,38 +101,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             String password = _passwordController.text.trim();
 
                             if (studentID.isEmpty || firstName.isEmpty || lastName.isEmpty || email.isEmpty || password.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Please fill in all required fields")),
+                              IconSnackBar.show(
+                                context: context,
+                                snackBarType: SnackBarType.alert,
+                                label: 'Please fill in all required fields.',
                               );
                               return;
                             }
-                            // Basic validations
-                            if (studentID.isEmpty || firstName.isEmpty || lastName.isEmpty || email.isEmpty || password.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("❌ Please fill in all required fields")),
-                              );
-                              return;
-                            }
-                            // // Validate Student ID: must be exactly 11 digits
-                            // if (!RegExp(r'^\d{11}$').hasMatch(studentID)) {
-                            //   ScaffoldMessenger.of(context).showSnackBar(
-                            //     SnackBar(content: Text("❌ Student ID must be 11 digits")),
-                            //   );
-                            //   return;
-                            // }
+
 
                             // Validate Email: must be a valid gmail address
                             if (!email.endsWith("@gmail.com")) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("❌ Email must be a valid @gmail.com address")),
-                              );
+                            IconSnackBar.show(
+                            context: context,
+                            snackBarType: SnackBarType.alert,
+                            label: 'Email must be a valid @gmail.com address.',
+                            );
                               return;
                             }
 
-                            // Validate Password: minimum 8 characters
+                            //Validate Password: minimum 8 characters
                             if (password.length < 8) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("❌ Password must be at least 8 characters long")),
+                              IconSnackBar.show(
+                                context: context,
+                                snackBarType: SnackBarType.alert,
+                                label: 'Password must be at least 8 characters long.',
                               );
                               return;
                             }
@@ -139,20 +133,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             // ✅ Check if user with same email exists
                             var existingUser = await MongoDatabase.getUserByEmail(email);
                             if (existingUser != null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Email already in use")),
+                              IconSnackBar.show(
+                                context: context,
+                                snackBarType: SnackBarType.error,
+                                label: 'Email already in use',
                               );
                               return;
                             }
 
+
+
                             //  check for duplicate Student ID
                             var existingStudent = await MongoDatabase.getUserByStudentID(studentID);
                             if (existingStudent != null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Student ID already in use")),
+                              IconSnackBar.show(
+                                context: context,
+                                snackBarType: SnackBarType.error,
+                                label: ' Student ID already in use',
                               );
                               return;
                             }
+
 
 
                             final hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());

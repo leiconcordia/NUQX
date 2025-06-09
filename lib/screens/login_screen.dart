@@ -11,6 +11,7 @@ import 'location_screen.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_application_1/utils/icon_snackbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -76,16 +77,20 @@ class _LoginScreenState extends State<LoginScreen> {
                             var user = await MongoDatabase.getUserByEmail(email);
 
                             if (user == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("User not found")),
+                              IconSnackBar.show(
+                                context: context,
+                                snackBarType: SnackBarType.error,
+                                label: 'User not found',
                               );
                               return;
                             }
 
                             // 2. Check role
                             if (user['role'] != 'student') {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("You are not authorized to log in.")),
+                              IconSnackBar.show(
+                                context: context,
+                                snackBarType: SnackBarType.alert,
+                                label: 'You are not authorized to log in.',
                               );
                               return;
                             }
@@ -98,16 +103,23 @@ class _LoginScreenState extends State<LoginScreen> {
                               await MongoDatabase.verifyAccountByEmail(email);
 
                               await _saveLoginState(user['email']);
+                              IconSnackBar.show(
+                                context: context,
+                                snackBarType: SnackBarType.success,
+                                label: 'Login successful!',
+                              );
 
                               _navigateToScreen(
                                      context,
                                 LocationScreen(userName: user['email']),
-                                //HomeScreen(userName: user['email']),
+                               // HomeScreen(userName: user['email']),
                               );
 
                             } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Incorrect password")),
+                              IconSnackBar.show(
+                                context: context,
+                                snackBarType: SnackBarType.error,
+                                label: 'Incorrect password',
                               );
                             }
                           },

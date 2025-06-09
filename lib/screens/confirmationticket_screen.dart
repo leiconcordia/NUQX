@@ -97,22 +97,28 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
               ],
             ),
             SizedBox(height: 10.h),
-            _buildDetailText(
-              "Name",
-              '${user?['firstName'] ?? ''} ${user?['lastName'] ?? 'User'}',
-            ),
+
             _buildDetailText(
               "Student ID",
               '${user?['studentID'] ?? 'N/A'}',
             ),
             _buildDetailText(
-              "Department",
-              '${user?['program'] ?? 'N/A'}',
+              "Student Name",
+              '${user?['firstName'] ?? ''} ${user?['lastName'] ?? 'User'}',
+            ),
+
+            _buildDetailText(
+              "Year Level",
+              '${user?['yearLevel'] ?? 'N/A'}',
             ),
             _buildDetailText(
-              "Concern",
-              widget.transactionConcern,
+              "Program",
+              '${user?['program'] ?? 'N/A'}',
             ),
+            // _buildDetailText(
+            //   "Concern",
+            //   widget.transactionConcern,
+            // ),
             SizedBox(height: 20.h),
             _buildActionButtons(context),
           ],
@@ -177,6 +183,8 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
             // Prepare queue data
             final newQueue = {
               'user': widget.userName,
+              'program' : user?['program'] ?? 'N/A',
+              'yearLevel' : user?['yearLevel'] ?? 'N/A',
               'transactionName': widget.transactionConcern,
               'transactionID': widget.transactionID,
               'generatedQueuenumber': generatedNumber,

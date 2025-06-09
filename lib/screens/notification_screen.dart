@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_application_1/utils/custom_page_route.dart';
+import 'package:flutter_application_1/widgets/custom_footer.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_application_1/widgets/custom_footer_with_nav.dart';
 import 'package:flutter_application_1/widgets/custom_header_with_title.dart';
@@ -79,9 +80,9 @@ class _NotificationsScreen extends State<NotificationsScreen> {
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () async {
-                        final user = await MongoDatabase.getUserByEmail(widget.userName);
 
-                        Navigator.of(context).pop();
+
+                        Navigator.of(context, rootNavigator: true).pop();
                         }
 
                   ),
@@ -142,7 +143,7 @@ class _NotificationsScreen extends State<NotificationsScreen> {
               ),
             ),
 
-            CustomFooterWithNav(userName: widget.userName, activeTab: 'home',),
+            CustomFooter(),
           ],
         ),
       ),

@@ -7,6 +7,7 @@ import 'home_screen.dart';
 import 'paymentform_screen.dart';
 import 'confirmationticket_screen.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class AccountingScreen extends StatefulWidget {
   final String userName;
@@ -147,46 +148,10 @@ class _AccountingScreen extends State<AccountingScreen> {
     );
   }
 
-//   Widget _buildAccountingCard(BuildContext context) {
-//     return GestureDetector(
-//       onTap: () {
-//         Navigator.push(
-//           context,
-//           noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName)),
-//         );
-//       },
-//       child: Container(
-//         width: 120.w,
-//         height: 120.h,
-//         decoration: BoxDecoration(
-//           color: const Color(0xFF2D3A8C),
-//           borderRadius: BorderRadius.circular(12.r),
-//           boxShadow: [
-//             BoxShadow(
-//               color: Colors.black26,
-//               blurRadius: 5,
-//               offset: const Offset(2, 2),
-//             ),
-//           ],
-//         ),
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             Icon(Icons.credit_card, size: 40.sp, color: Colors.white),
-//             SizedBox(height: 8.h),
-//             Text(
-//               "Payment",
-//               style: TextStyle(color: Colors.white, fontSize: 14.sp),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+  Widget buildTransactionCard(Map<String, dynamic> transaction, VoidCallback onTap) {
+    final String iconName = transaction['icon'] ?? '';
+    final String assetPath = 'assets/icons/mobile-icons/$iconName.svg';
 
-  Widget buildTransactionCard(Map<String, dynamic> transaction,
-      VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -206,8 +171,19 @@ class _AccountingScreen extends State<AccountingScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.credit_card, size: 40.sp, color: Colors.white),
-            // You can map from transaction['icon'] if needed
+            SvgPicture.asset(
+              assetPath,
+              width: 40.sp,
+              height: 40.sp,
+              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              placeholderBuilder: (context) => const CircularProgressIndicator(),
+              // Fallback if asset is missing or invalid
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.credit_card,
+                size: 40.sp,
+                color: Colors.white,
+              ),
+            ),
             SizedBox(height: 8.h),
             Text(
               transaction['name'] ?? 'Transaction',

@@ -7,6 +7,7 @@ import 'inquiryform_screen.dart'; // Imported Inquiry Form Screen
 import '../utils/custom_page_route.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import 'package:flutter_application_1/screens/confirmationticket_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class AdmissionScreen extends StatefulWidget {
   final String userName;
@@ -31,7 +32,7 @@ class _AdmissionScreen extends State<AdmissionScreen> {
   // fetch registrar transactions
   Future<void> loadAdmission() async {
     transactions =
-    await MongoDatabase.getTransactionsByDepartment("admission");
+    await MongoDatabase.getTransactionsByDepartment("admissions");
     setState(() {});
   }
 
@@ -44,8 +45,6 @@ class _AdmissionScreen extends State<AdmissionScreen> {
       });
     }
   }
-
-
 
 
   @override
@@ -62,7 +61,8 @@ class _AdmissionScreen extends State<AdmissionScreen> {
           children: [
             Stack(
               children: [
-                 CustomHeaderWithTitle(userName: widget.userName, title: "Admission"),
+                CustomHeaderWithTitle(
+                    userName: widget.userName, title: "Admission"),
                 Positioned(
                   left: 14.w,
                   top: 17.h,
@@ -72,7 +72,7 @@ class _AdmissionScreen extends State<AdmissionScreen> {
                       Navigator.pushAndRemoveUntil(
                         context,
                         noAnimationRoute(HomeScreen(userName: widget.userName)),
-                        (route) => false,
+                            (route) => false,
                       );
                     },
                   ),
@@ -106,7 +106,8 @@ class _AdmissionScreen extends State<AdmissionScreen> {
                         "No transaction for this department",
                         style: TextStyle(
                           fontSize: 16.sp,
-                          color: Color(0xFF2D3A8C), // Blue color from your palette
+                          color: Color(0xFF2D3A8C),
+                          // Blue color from your palette
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -119,7 +120,11 @@ class _AdmissionScreen extends State<AdmissionScreen> {
                         return buildTransactionCard(transaction, () {
                           Navigator.push(
                             context,
-                            noAnimationRoute(ConfirmationTicketScreen(userName: widget.userName, transactionConcern: transaction['name'],  transactionID: transaction['transactionID'], department : 'admission')),
+                            noAnimationRoute(ConfirmationTicketScreen(
+                                userName: widget.userName,
+                                transactionConcern: transaction['name'],
+                                transactionID: transaction['transactionID'],
+                                department: 'admission')),
                           );
                         });
                       }).toList(),
@@ -139,40 +144,58 @@ class _AdmissionScreen extends State<AdmissionScreen> {
       ),
     );
   }
-}
 
-Widget buildTransactionCard(Map<String, dynamic> transaction,
-    VoidCallback onTap) {
-  return GestureDetector(
-    onTap: onTap,
-    child: Container(
-      width: 120.w,
-      height: 120.h,
-      decoration: BoxDecoration(
-        color: const Color(0xFF2D3A8C),
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 5,
-            offset: const Offset(2, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.newspaper, size: 40.sp, color: Colors.white),
-          // You can map from transaction['icon'] if needed
-          SizedBox(height: 8.h),
-          Text(
-            transaction['name'] ?? 'Transaction',
-            style: TextStyle(color: Colors.white, fontSize: 14.sp),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    ),
-  );
-}
 
+  Widget buildTransactionCard(Map<String, dynamic> transaction,
+      VoidCallback onTap) {
+    final String iconName = transaction['icon'] ?? '';
+    final String assetPath = 'assets/icons/mobile-icons/$iconName.svg';
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 120.w,
+        height: 120.h,
+        decoration: BoxDecoration(
+          color: const Color(0xFF2D3A8C),
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 5,
+              offset: const Offset(2, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              assetPath,
+              width: 40.sp,
+              height: 40.sp,
+              colorFilter: const ColorFilter.mode(
+                  Colors.white, BlendMode.srcIn),
+              placeholderBuilder: (
+                  context) => const CircularProgressIndicator(),
+              // Fallback if asset is missing or invalid
+              errorBuilder: (context, error, stackTrace) =>
+                  Icon(
+                    Icons.credit_card,
+                    size: 40.sp,
+                    color: Colors.white,
+                  ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              transaction['name'] ?? 'Transaction',
+              style: TextStyle(color: Colors.white, fontSize: 14.sp),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+}

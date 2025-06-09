@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/custom_footer_with_nav.dart';
 import '../widgets/custom_header_with_title.dart';
 
+
 class TrackerScreen extends StatefulWidget {
   static const String routeName = "/tracker";
   final String userName;
@@ -71,6 +72,8 @@ class _TrackerScreen extends State<TrackerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading data: ${e.toString()}')),
         );
+
+
       }
     } finally {
       if (mounted) {
@@ -151,21 +154,7 @@ class _TrackerScreen extends State<TrackerScreen> {
             Stack(
               children: [
                 CustomHeaderWithTitle(userName: widget.userName, title: "Queue Tracker"),
-                Positioned(
-                  left: 14.w,
-                  top: 17.h,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      _refreshTimer?.cancel();
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        noAnimationRoute(HomeScreen(userName: widget.userName)),
-                            (route) => false,
-                      );
-                    },
-                  ),
-                ),
+
               ],
             ),
 

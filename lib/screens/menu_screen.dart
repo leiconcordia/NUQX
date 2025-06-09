@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_application_1/utils/icon_snackbar.dart';
 
 
 class MenuScreen extends StatefulWidget {
@@ -85,8 +86,10 @@ class _MenuScreenState extends State<MenuScreen> {
 
       // Show SnackBar after rebuild
       Future.delayed(Duration.zero, () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile picture updated!")),
+        IconSnackBar.show(
+          context: context,
+          snackBarType: SnackBarType.success,
+          label: 'Profile picture updated!',
         );
       });
     }
@@ -109,20 +112,7 @@ class _MenuScreenState extends State<MenuScreen> {
             Stack(
               children: [
                  CustomHeaderWithTitle(userName: widget.userName, title: "Menu"),
-                Positioned(
-                  left: 14.w,
-                  top: 17.h,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        noAnimationRoute(HomeScreen(userName: widget.userName)),
-                        (route) => false,
-                      );
-                    },
-                  ),
-                ),
+
               ],
             ),
 

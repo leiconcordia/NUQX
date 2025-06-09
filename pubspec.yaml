@@ -18,9 +18,9 @@ dependencies:
   permission_handler: ^12.0.0+1
   location: ^8.0.0
   app_settings: ^6.1.1
-  material_design_icons_flutter: ^7.0.7296
-  flutter_mdi_icons: ^0.1.3
   image_picker: ^1.1.2
+  flutter_svg: ^2.1.0
+  flutter_icon_snackbar: ^1.2.1
 
 
 
@@ -36,6 +36,7 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/logo2.png
+    - assets/icons/mobile-icons/
 
 
   fonts:

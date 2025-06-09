@@ -6,6 +6,7 @@ import '../widgets/custom_footer.dart';
 import '../widgets/custom_header.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import 'package:email_otp/email_otp.dart';
+import 'package:flutter_application_1/utils/icon_snackbar.dart';
 
 
 
@@ -82,18 +83,23 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result
-              ? "OTP sent to ${widget.userName}"
-              : "Failed to send OTP"),
-        ),
+
+      IconSnackBar.show(
+        context: context,
+        snackBarType: SnackBarType.success,
+        label: "OTP sent to ${widget.userName}",
       );
+
+
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()}")),
+      IconSnackBar.show(
+        context: context,
+        snackBarType: SnackBarType.error,
+        label: "Error: ${e.toString()}",
       );
+
+
     }
   }
 
@@ -149,8 +155,10 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     bool isVerified = await verifyOTP(enteredOTP);
     if (!isVerified) {
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid OTP")),
+      IconSnackBar.show(
+        context: context,
+        snackBarType: SnackBarType.error,
+        label: "Invalid OTP",
       );
       return;
     }

@@ -251,6 +251,28 @@ class _LocationScreenState extends State<LocationScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 45,
+                      child: OutlinedButton.icon(
+                        onPressed: _getUserLocation,
+                        icon: const Icon(Icons.refresh, color: Color(0xFF2D3A8C)),
+                        label: const Text(
+                          'Retry Location Check',
+                          style: TextStyle(
+                            color: Color(0xFF2D3A8C),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFF2D3A8C)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -261,4 +283,5 @@ class _LocationScreenState extends State<LocationScreen> {
       ),
     );
   }
+
 }
