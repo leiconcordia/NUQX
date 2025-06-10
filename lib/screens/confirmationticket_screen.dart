@@ -183,7 +183,9 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
 
             // Prepare queue data
             final newQueue = {
+              'studentID': user?['studentID'] ?? 'N/A',
               'user': widget.userName,
+              'studentName': (user?['firstName'] ?? '') + ' ' + (user?['lastName'] ?? 'User'),
               'program' : user?['program'] ?? 'N/A',
               'yearLevel' : user?['yearLevel'] ?? 'N/A',
               'transactionName': widget.transactionConcern,
