@@ -23,6 +23,8 @@ class RegistrarScreen extends StatefulWidget {
 class _RegistrarScreen extends State<RegistrarScreen> {
   Map<String, dynamic>? user;
   List<Map<String, dynamic>> transactions = [];
+
+
   @override
   void initState() {
     super.initState();

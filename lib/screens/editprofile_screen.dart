@@ -90,6 +90,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   Future<void> fetchUserData() async {
     final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
+
+
     if (fetchedUser != null) {
       setState(() {
         user = fetchedUser;
@@ -101,10 +103,28 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         lastNameController.text = user!['lastName'] ?? '';
         middleNameController.text = user!['middleName'] ?? '';
 
-        // Fetch program and year level from DB if they exist
-        selectedProgram = programOptions.contains(user!['program']?.toString().trim())
-            ? user!['program'].toString().trim()
-            : null;
+        // selectedProgram = collegePrograms[selectedCollege].contains(user!['program']?.toString().trim())
+        //     ? user!['yearLevel'].toString().trim()
+        //     : null;
+
+        selectedProgram = user!['program']?.toString().trim();
+
+        selectedCollege = collegePrograms.entries
+            .firstWhere(
+              (entry) => entry.value.contains(selectedProgram),
+          orElse: () => MapEntry('', []),
+        )
+            .key;
+
+// If no matching college was found, reset to selection mode
+        if (selectedCollege == '') {
+          selectedCollege = null;
+          selectedProgram = null;
+          isSelectingCollege = true;
+        } else {
+          isSelectingCollege = false;
+        }
+
 
         selectedYearLevel = yearLevelOptions.contains(user!['yearLevel']?.toString().trim())
             ? user!['yearLevel'].toString().trim()
@@ -113,10 +133,68 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       });
     }
   }
+
   String? selectedProgram;
+  String? selectedCollege;
+  bool isSelectingCollege = true;
   String? selectedYearLevel;
 
-  final List<String> programOptions = ['BSIT', 'BSHM', 'BSCS', 'BSTM'];
+
+  final Map<String, List<String>> collegePrograms = {
+    'College of Computing and Information Technology (CCIT)': [
+      'BSCS-ML',
+      'BSCS-DF',
+      'DIT',
+      'ACT',
+      'BSIT-MWA',
+      'BSIT-MAA',
+      'MIT',
+      'PhDCS',
+      'MSCS',
+    ],
+    'College of Allied Health (CAH)': ['BSN', 'BSP', 'BSMT'],
+    'College of Business and Accountancy (CBA)': [
+      'BSAccountancy',
+      'BSMA',
+      'BSBA-MktgMgt',
+      'BSBA-HRM',
+      'BSBA-FinMgt',
+      'MBA',
+      'DBA',
+    ],
+    'College of Education, Arts, and Sciences (CEAS)': [
+      'BEEd',
+      'LLC-IEEP',
+      'BSEd-ENG',
+      'MPES',
+      'BSPSY',
+      'MAED-FIL',
+      'MAED-EM',
+      'MAED-ELE',
+      'MAED-SPED',
+      'EdD',
+      'BPEd',
+      'AB-PolSci',
+      'AB',
+      'ABComm',
+      'AB-ELS',
+      'CertProEd',
+    ],
+    'College of Architecture (COA)': ['BSEnvPln', 'BSArch'],
+    'College of Tourism and Hospitality Management (CTHM)': ['BSTM', 'BSHM'],
+    'College of Engineering (ENGG)': [
+      'BSME',
+      'BSEcE',
+      'BSESE',
+      'BSCE',
+      'BSCpE',
+      'MSCE',
+      'MSCpE',
+      'MSSE',
+    ],
+  };
+
+
   final List<String> yearLevelOptions = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 
   TextEditingController studentIdController = TextEditingController();
@@ -184,17 +262,24 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     _buildTextField("Middle Name", middleNameController),
                     _buildTextField("Last Name", lastNameController),
 
-                    _buildDropdownField(
-                      label: "Program",
-                      selectedValue: selectedProgram,
-                      options: programOptions,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedProgram = value;
-                        });
-                      },
-                      hintText: "Enter Department",
-                    ),
+                    buildSingleProgramDropdown(),
+
+                    if (!isSelectingCollege)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          icon: const Icon(Icons.arrow_back),
+                          label: const Text("Back to Colleges"),
+                          onPressed: () {
+                            setState(() {
+                              isSelectingCollege = true;
+                              selectedProgram = null;
+                            });
+                          },
+                        ),
+                      ),
+
+
                     _buildDropdownField(
                       label: "Year Level",
                       selectedValue: selectedYearLevel,
@@ -262,6 +347,49 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
     );
   }
+
+  Widget buildSingleProgramDropdown() {
+    final List<String> dropdownOptions = isSelectingCollege
+        ? collegePrograms.keys.toList()
+        : collegePrograms[selectedCollege!] ?? [];
+
+    // Validate the selected value
+    final String? currentValue = isSelectingCollege
+        ? (dropdownOptions.contains(selectedCollege) ? selectedCollege : null)
+        : (dropdownOptions.contains(selectedProgram) ? selectedProgram : null);
+
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: isSelectingCollege ? 'College' : 'Program',
+        border: const OutlineInputBorder(),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: currentValue,
+          isExpanded: true,
+          hint: Text(isSelectingCollege ? 'Select College' : 'Select Program'),
+          items: dropdownOptions.map((option) {
+            return DropdownMenuItem<String>(
+              value: option,
+              child: Text(option),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              if (isSelectingCollege) {
+                selectedCollege = value;
+                selectedProgram = null;
+                isSelectingCollege = false;
+              } else {
+                selectedProgram = value;
+              }
+            });
+          },
+        ),
+      ),
+    );
+  }
+
 
 
 

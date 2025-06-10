@@ -8,6 +8,7 @@ import 'accounting_screen.dart';
 import 'registrar_screen.dart';
 import 'other_concern_form_screen.dart';
 
+
 class HomeScreen extends StatefulWidget {
   static const String routeName = "/home";
   final String userName; // This is actually the email
@@ -63,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            CustomHeaderWithLogo(userName: user!['firstName']),
+            CustomHeaderWithLogo(userName: widget.userName),
 
             Expanded(
               child: SingleChildScrollView(
