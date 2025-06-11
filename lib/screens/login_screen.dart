@@ -6,6 +6,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:location/location.dart';
 import '../widgets/custom_footer.dart';
 import '../widgets/custom_header.dart';
+
+
 import 'signup_screen.dart';
 import 'location_screen.dart';
 import 'package:bcrypt/bcrypt.dart';
@@ -109,11 +111,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                 label: 'Login successful!',
                               );
 
-                              _navigateToScreen(
-                                     context,
-                                LocationScreen(userName: user['email']),
-                               // HomeScreen(userName: user['email']),
+                              // _navigateToScreen(
+                              //        context,
+                              //   LocationScreen(userName: user['email']),
+                              //  // HomeScreen(userName: user['email']),
+                              // );
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => LocationScreen(userName: user['email']),
+                                ),
                               );
+
+
 
                             } else {
                               IconSnackBar.show(

@@ -5,22 +5,18 @@ import 'package:flutter_application_1/screens/menu_screen.dart';
 import 'package:flutter_application_1/screens/tracker_screen.dart';
 
 class CustomFooterWithNav extends StatelessWidget {
-  final String userName;
-
-
-
-  final String activeTab;
+  final int currentIndex;
+  final Function(int) onTabSelected;
 
   const CustomFooterWithNav({
     super.key,
-    required this.userName,
-    required this.activeTab,
+    required this.currentIndex,
+    required this.onTabSelected,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
       height: 80.h,
       decoration: BoxDecoration(
         color: const Color(0xFF2D3A8C),
@@ -34,72 +30,26 @@ class CustomFooterWithNav extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavButton(
-            context,
-            icon: Icons.assignment,
-            label: "Form",
-            isActive: activeTab == 'home',
-            onTap:
-                () =>
-                    _navigateToScreen(context, HomeScreen(userName: userName)),
-          ),
-          _buildNavButton(
-            context,
-            icon: Icons.play_arrow,
-            label: "Tracker",
-            isActive: activeTab == 'tracker',
-            onTap:
-                () => _navigateToScreen(
-                  context,
-                  TrackerScreen(userName: userName, ),
-                ),
-          ),
-          _buildNavButton(
-            context,
-            icon: Icons.menu,
-            label: "Menu",
-            isActive: activeTab == 'menu',
-            onTap:
-                () =>
-
-                    _navigateToScreen(context, MenuScreen(userName: userName)),
-          ),
+          _buildNavButton(Icons.assignment, "Form", 0),
+          _buildNavButton(Icons.play_arrow, "Tracker", 1),
+          _buildNavButton(Icons.menu, "Menu", 2),
         ],
       ),
     );
   }
 
-  void _navigateToScreen(BuildContext context, Widget screen) {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => screen,
-        transitionDuration: Duration(milliseconds: 200),
-        transitionsBuilder: (_, animation, __, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-      ),
-    );
-  }
-
-  Widget _buildNavButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildNavButton(IconData icon, String label, int index) {
+    final isActive = currentIndex == index;
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => onTabSelected(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
         padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
         decoration: BoxDecoration(
-          color:
-              isActive
-                  ? const Color(0xFFFFD700).withOpacity(0.15)
-                  : Colors.transparent,
+          color: isActive
+              ? const Color(0xFFFFD700).withOpacity(0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(10.r),
         ),
         child: Column(
@@ -135,3 +85,4 @@ class CustomFooterWithNav extends StatelessWidget {
     );
   }
 }
+

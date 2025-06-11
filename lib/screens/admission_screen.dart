@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/custom_header_with_title.dart';
-import '../widgets/custom_footer_with_nav.dart'; // Updated footer with navigation
+import '../widgets/custom_footer.dart'; // Updated footer with navigation
+import '../widgets/main_scaffold.dart'; // Updated footer with navigation
 import 'inquiryform_screen.dart'; // Imported Inquiry Form Screen
 import '../utils/custom_page_route.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
@@ -37,15 +38,27 @@ class _AdmissionScreen extends State<AdmissionScreen> {
   }
 
   Future<void> fetchUserData() async {
-    // 'userName' is the email in this context
-    final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
-    if (fetchedUser != null) {
+    try {
+      final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
       setState(() {
         user = fetchedUser;
       });
+
+      if (fetchedUser == null) {
+        // Optional: Handle case where user wasn't found
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not found')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        user = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching user: $e')),
+      );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +84,7 @@ class _AdmissionScreen extends State<AdmissionScreen> {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        noAnimationRoute(HomeScreen(userName: widget.userName)),
+                        noAnimationRoute(MainScaffold(userName: widget.userName)),
                             (route) => false,
                       );
                     },
@@ -137,9 +150,9 @@ class _AdmissionScreen extends State<AdmissionScreen> {
               ),
             ),
 
-
+            CustomFooter(),
             // Footer remains at the bottom
-            CustomFooterWithNav(userName: widget.userName, activeTab: 'home'),
+           // CustomFooterWithNav(userName: widget.userName, activeTab: 'home'),
           ],
         ),
       ),

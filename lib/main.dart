@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
     final userName = prefs.getString('userName') ?? '';
 
     if (isLoggedIn && userName.isNotEmpty) {
-      return HomeScreen(userName: userName);
+      return LocationScreen(userName: userName);
     } else {
       return const LoginScreen();
     }

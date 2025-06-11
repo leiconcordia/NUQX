@@ -74,7 +74,7 @@ class OtherConcernFormScreen extends StatelessWidget {
                 ),
               ),
             ),
-            CustomFooterWithNav(userName: userName, activeTab: 'home',),
+            //CustomFooterWithNav(userName: userName, activeTab: 'home',),
           ],
         ),
       ),

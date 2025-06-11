@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../widgets/custom_header.dart';
+import '../widgets/main_scaffold.dart';
 import '../widgets/custom_footer.dart';
 import 'home_screen.dart';
 
@@ -161,8 +162,7 @@ class _LocationScreenState extends State<LocationScreen> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        HomeScreen(userName: widget.userName),
+                    builder: (context) => MainScaffold(userName: widget.userName),
                   ),
                 );
               },

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../utils/custom_page_route.dart';
-import '../widgets/custom_footer_with_nav.dart';
+import '../widgets/custom_footer.dart';
+import '../widgets/main_scaffold.dart';
 import '../widgets/custom_header_with_title.dart';
 import 'home_screen.dart';
 import 'paymentform_screen.dart';
@@ -60,6 +61,11 @@ class _AccountingScreen extends State<AccountingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -76,7 +82,7 @@ class _AccountingScreen extends State<AccountingScreen> {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        noAnimationRoute(HomeScreen(userName: widget.userName)),
+                        noAnimationRoute(MainScaffold(userName: widget.userName)),
                             (route) => false,
                       );
                     },
@@ -141,7 +147,7 @@ class _AccountingScreen extends State<AccountingScreen> {
                 ),
               ),
             ),
-            CustomFooterWithNav(userName: widget.userName, activeTab: 'home'),
+            CustomFooter(),
           ],
         ),
       ),

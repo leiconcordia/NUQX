@@ -199,10 +199,10 @@ class _TrackerScreen extends State<TrackerScreen> {
             ),
 
 
-            CustomFooterWithNav(
-              userName: widget.userName,
-              activeTab: 'tracker',
-            ),
+            // CustomFooterWithNav(
+            //   userName: widget.userName,
+            //   activeTab: 'tracker',
+            // ),
           ],
         ),
       ),

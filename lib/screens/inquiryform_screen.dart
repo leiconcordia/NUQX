@@ -96,7 +96,7 @@ class InquiryScreen extends StatelessWidget {
             ),
 
             // Footer remains at the bottom
-            CustomFooterWithNav(userName: userName, activeTab: 'home',),
+            //CustomFooterWithNav(userName: userName, activeTab: 'home',),
           ],
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/custom_footer_with_nav.dart';
+import '../widgets/main_scaffold.dart';
 import '../widgets/custom_header_with_logo.dart';
 import 'admission_screen.dart';
 import 'accounting_screen.dart';
@@ -142,6 +143,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                           ),
 
+
+
                         ],
                       ),
 
@@ -152,10 +155,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            CustomFooterWithNav(
-              userName: widget.userName,
-              activeTab: 'home', // Tell footer you're on Form tab
-            ),
+            //CustomFooterWithNav(
+            //   userName: widget.userName,
+            //   activeTab: 'home', // Tell footer you're on Form tab
+            //),
           ],
         ),
       ),
@@ -165,16 +168,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateToScreen(BuildContext context, Widget screen) {
     Navigator.push(
       context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => screen,
-        transitionDuration: Duration.zero, // Instantly switch screens
-        reverseTransitionDuration: Duration.zero,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return child; // No animation
-        },
-      ),
+      MaterialPageRoute(builder: (_) => screen),
     );
   }
+
 
   Widget _buildCategoryTile({
     required String title,

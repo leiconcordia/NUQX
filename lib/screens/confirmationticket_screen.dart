@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../widgets/custom_footer_with_nav.dart';
+import '../widgets/custom_footer.dart';
 import '../widgets/custom_header_with_title.dart';
 import 'requestdocuments_form_screen.dart';
 import 'tracker_screen.dart';
@@ -64,7 +64,7 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
                 ),
               ),
             ),
-            CustomFooterWithNav(userName: widget.userName, activeTab: 'home',),
+            CustomFooter(),
           ],
         ),
       ),

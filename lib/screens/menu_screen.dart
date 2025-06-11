@@ -186,7 +186,7 @@ class _MenuScreenState extends State<MenuScreen> {
 
 
             // Footer with Navigation
-            CustomFooterWithNav(userName: widget.userName, activeTab: 'menu'),
+           //CustomFooterWithNav(userName: widget.userName, activeTab: 'menu'),
           ],
         ),
       ),

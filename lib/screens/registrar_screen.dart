@@ -3,6 +3,7 @@ import 'package:flutter_application_1/screens/confirmationticket_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../utils/custom_page_route.dart';
 import '../widgets/custom_footer_with_nav.dart';
+import '../widgets/main_scaffold.dart';
 import '../widgets/custom_header_with_title.dart';
 import 'enrollment_form_screen.dart';
 import 'requestdocuments_form_screen.dart';
@@ -38,19 +39,36 @@ class _RegistrarScreen extends State<RegistrarScreen> {
     setState(() {});
   }
 
-
   Future<void> fetchUserData() async {
-    // 'userName' is the email in this context
-    final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
-    if (fetchedUser != null) {
+    try {
+      final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
       setState(() {
         user = fetchedUser;
       });
+
+      if (fetchedUser == null) {
+        // Optional: Handle case where user wasn't found
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not found')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        user = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching user: $e')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -67,7 +85,7 @@ class _RegistrarScreen extends State<RegistrarScreen> {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        noAnimationRoute(HomeScreen(userName: widget.userName)),
+                        noAnimationRoute(MainScaffold(userName: widget.userName)),
                         (route) => false,
                       );
                     },
@@ -127,7 +145,7 @@ class _RegistrarScreen extends State<RegistrarScreen> {
               ),
             ),
 
-            CustomFooterWithNav(userName: widget.userName, activeTab: 'home',),
+           // CustomFooterWithNav(userName: widget.userName, activeTab: 'home',),
           ],
         ),
       ),

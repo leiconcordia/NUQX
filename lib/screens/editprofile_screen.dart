@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'menu_screen.dart'; // Import MenuScreen
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import '../widgets/custom_header_with_title.dart';
-import '../widgets/custom_footer_with_nav.dart';
+import '../widgets/custom_footer.dart';
 import 'package:flutter_application_1/utils/icon_snackbar.dart';
 import 'dart:convert';
 
@@ -337,9 +337,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               ),
             ),
 
-        CustomFooterWithNav(
-        userName: widget.userName, activeTab: 'menu',
-        ),
+            CustomFooter(),
         ],
 
         ),

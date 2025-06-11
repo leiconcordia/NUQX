@@ -77,7 +77,7 @@ class EnrollmentFormScreen extends StatelessWidget {
                 ),
               ),
             ),
-            CustomFooterWithNav(userName: userName, activeTab: 'home',),
+           // CustomFooterWithNav(userName: userName, activeTab: 'home',),
           ],
         ),
       ),
