@@ -6,6 +6,8 @@ import 'requestdocuments_form_screen.dart';
 import 'tracker_screen.dart';
 import '../utils/custom_page_route.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/main_scaffold.dart';
 
 class ConfirmationTicketScreen extends StatefulWidget {
   final String userName;
@@ -27,6 +29,12 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
     super.initState();
     fetchUserData();
   }
+
+  static Future<void> resetConfirmationFlag() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasConfirmedTransaction', false);
+  }
+
 
   Future<void> fetchUserData() async {
     // 'userName' is the email in this context
@@ -203,13 +211,18 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
 
             // Insert into DB
             await MongoDatabase.insertQueueNumber(newQueue);
+            await resetConfirmationFlag();
 
             // Navigate
             Navigator.pushAndRemoveUntil(
               context,
-              noAnimationRoute(TrackerScreen(userName: widget.userName)),
+              noAnimationRoute(MainScaffold(
+                userName: widget.userName,
+                initialTabIndex: 1, // 1 is for Tracker tab
+              )),
                   (route) => false,
             );
+
           },
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(

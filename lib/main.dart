@@ -3,10 +3,12 @@ import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_application_1/screens/signup_screen.dart';
 import 'package:flutter_application_1/screens/login_screen.dart';
+import '../widgets/main_scaffold.dart';
 import 'package:flutter_application_1/screens/location_screen.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_application_1/services/icon_service.dart';
 import 'package:mongo_dart/mongo_dart.dart';
+
 import 'dart:ui' as ui;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,7 +28,7 @@ class MyApp extends StatelessWidget {
     final userName = prefs.getString('userName') ?? '';
 
     if (isLoggedIn && userName.isNotEmpty) {
-      return LocationScreen(userName: userName);
+      return MainScaffold(userName: userName);
     } else {
       return const LoginScreen();
     }

@@ -7,6 +7,8 @@ import 'package:flutter_application_1/utils/custom_page_route.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/custom_footer_with_nav.dart';
 import '../widgets/custom_header_with_title.dart';
+import '../widgets/main_scaffold.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class TrackerScreen extends StatefulWidget {
@@ -31,13 +33,15 @@ class _TrackerScreen extends State<TrackerScreen> {
   String queueStatus = '-';
 
 
-
+  bool hasConfirmedCompletion = false;
+  final String confirmationKey = 'hasConfirmedTransaction';
 
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _loadConfirmationStatus();
     _setupAutoRefresh();// Call async method after widget is initialized
 
   }
@@ -45,6 +49,13 @@ class _TrackerScreen extends State<TrackerScreen> {
   void dispose() {
     _refreshTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _loadConfirmationStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      hasConfirmedCompletion = prefs.getBool(confirmationKey) ?? false;
+    });
   }
 
   void _setupAutoRefresh() {
@@ -123,29 +134,16 @@ class _TrackerScreen extends State<TrackerScreen> {
     }
   }
 
-  // Future<void> QueueStatusInfo() async {
-  //   final result = await MongoDatabase.getUserQueueInfoAndStatus(widget.userName);
-  //
-  //   if (mounted && result != null) {
-  //     setState(() {
-  //       queueStatus = result['status'] ?? 'not found';
-  //       userQueueNumber = result['generatedQueuenumber'] ?? '-';
-  //     });
-  //   } else {
-  //     setState(() {
-  //       queueStatus = 'not found';
-  //
-  //     });
-  //   }
-  // }
 
 
 
   @override
   Widget build(BuildContext context) {
-
-
-
+    if (isLoading != false) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -186,7 +184,16 @@ class _TrackerScreen extends State<TrackerScreen> {
                             _buildQueueInfoBox(),
                           ],
                         );
+                      } else if (queueInfo?['status'] == 'Completed') {
+                        if (hasConfirmedCompletion) {
+                          return _buildNotInQueue(); // ⬅️ Show this AFTER user taps Confirm
+                        } else {
+                          return _buildTransactionCompleteBox(); // ⬅️ Default display
+                        }
                       }
+
+
+
                     }
 
 
@@ -469,11 +476,9 @@ class _TrackerScreen extends State<TrackerScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Big blue circle with check icon
           Container(
             width: 200.w,
             height: 200.w,
-
             child: Center(
               child: Icon(
                 Icons.check_circle,
@@ -482,10 +487,7 @@ class _TrackerScreen extends State<TrackerScreen> {
               ),
             ),
           ),
-
           SizedBox(height: 24.h),
-
-          // Transaction complete text
           Text(
             "Transaction Complete",
             style: TextStyle(
@@ -494,8 +496,24 @@ class _TrackerScreen extends State<TrackerScreen> {
               color: Color(0xFF2D3A8C),
             ),
           ),
-
           SizedBox(height: 32.h),
+
+          // ✅ Confirm Button
+          ElevatedButton(
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setBool(confirmationKey, true);
+
+              setState(() {
+                hasConfirmedCompletion = true;
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF2D3A8C),
+              padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
+            ),
+            child: Text("Confirm", style: TextStyle(fontSize: 16.sp, color: Colors.white)),
+          ),
 
         ],
       ),

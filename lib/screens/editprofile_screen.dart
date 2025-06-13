@@ -372,6 +372,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               child: Text(option),
             );
           }).toList(),
+
           onChanged: (value) {
             setState(() {
               if (isSelectingCollege) {

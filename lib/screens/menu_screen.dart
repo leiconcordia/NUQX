@@ -172,6 +172,11 @@ class _MenuScreenState extends State<MenuScreen> {
                         MaterialPageRoute(
                           builder: (context) => ProfileEditScreen(userName : widget.userName),
                         ),
+                      ); Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProfileEditScreen(userName : widget.userName),
+                        ),
                       );
                     }),
                     _buildMenuItem(Icons.logout, 'Log Out', () {

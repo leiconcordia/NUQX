@@ -17,33 +17,32 @@ import 'package:flutter_application_1/widgets/custom_footer_with_nav.dart';
 
 class MainScaffold extends StatefulWidget {
   final String userName;
-  const MainScaffold({super.key, required this.userName});
+  final int initialTabIndex;
+
+  const MainScaffold({
+    super.key,
+    required this.userName,
+    this.initialTabIndex = 0, // default to 0 if not provided
+  });
 
   @override
   State<MainScaffold> createState() => _MainScaffoldState();
 }
 
 class _MainScaffoldState extends State<MainScaffold> {
-  int currentIndex = 0;
+  late int currentIndex;
 
   late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
+    currentIndex = widget.initialTabIndex;
+
     _screens = [
       HomeScreen(userName: widget.userName),
       TrackerScreen(userName: widget.userName),
       MenuScreen(userName: widget.userName),
-      // ProfileEditScreen(userName: widget.userName),
-      // AdmissionScreen(userName: widget.userName),
-      // AccountingScreen(userName: widget.userName),
-      // ConfirmationTicketScreen( userName: widget.userName,
-      //   transactionConcern: 'Sample Concern',
-      //   transactionID: 'TEMP123',
-      //   department: 'Sample Department',
-      //   TransactionAdmin: 'sample@admin.com')
-
     ];
   }
 
@@ -65,4 +64,5 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
 }
+
 
