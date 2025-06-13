@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:location/location.dart';
 import '../widgets/custom_footer.dart';
 import '../widgets/custom_header.dart';
+import 'package:flutter_application_1/utils/icon_snackbar.dart';
 
 
 import 'signup_screen.dart';
@@ -13,7 +14,6 @@ import 'location_screen.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_application_1/utils/icon_snackbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,6 +23,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -40,139 +42,87 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 100.h),
-                      Center(
-                        child: Text(
-                          "Welcome to NUQX!",
-                          style: TextStyle(
-                            fontSize: 22.sp,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2D3A8C),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 30.h),
-                      _buildLabel("Email*"),
-                      _buildTextField(controller: _emailController),
-                      _buildLabel("Password*"),
-                      _buildPasswordField(),
-                      SizedBox(height: 20.h),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2D3A8C),
-                            padding: EdgeInsets.symmetric(vertical: 14.h),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24.r),
-                            ),
-                          ),
-
-                          onPressed: () async {
-                            String email = _emailController.text.trim();
-                            String password = _passwordController.text;
-
-                            // 1. Get user from MongoDB
-                            var user = await MongoDatabase.getUserByEmail(email);
-
-                            if (user == null) {
-                              IconSnackBar.show(
-                                context: context,
-                                snackBarType: SnackBarType.error,
-                                label: 'User not found',
-                              );
-                              return;
-                            }
-
-                            // 2. Check role
-                            if (user['role'] != 'student') {
-                              IconSnackBar.show(
-                                context: context,
-                                snackBarType: SnackBarType.alert,
-                                label: 'You are not authorized to log in.',
-                              );
-                              return;
-                            }
-
-                            // 3. Compare password using BCrypt
-                            bool passwordMatch = BCrypt.checkpw(password, user['password']);
-
-                            if (passwordMatch) {
-
-                              await MongoDatabase.verifyAccountByEmail(email);
-
-                              await _saveLoginState(user['email']);
-                              IconSnackBar.show(
-                                context: context,
-                                snackBarType: SnackBarType.success,
-                                label: 'Login successful!',
-                              );
-
-                              // _navigateToScreen(
-                              //        context,
-                              //   LocationScreen(userName: user['email']),
-                              //  // HomeScreen(userName: user['email']),
-                              // );
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => LocationScreen(userName: user['email']),
-                                ),
-                              );
-
-
-
-                            } else {
-                              IconSnackBar.show(
-                                context: context,
-                                snackBarType: SnackBarType.error,
-                                label: 'Incorrect password',
-                              );
-                            }
-                          },
-
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 100.h),
+                        Center(
                           child: Text(
-                            "Log in",
+                            "Welcome to NUQX!",
                             style: TextStyle(
-                              fontSize: 16.sp,
-                              color: Colors.white,
+                              fontSize: 22.sp,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF2D3A8C),
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: 20.h),
-                      Center(
-                        child: TextButton(
-                          onPressed:
-                              () => _navigateToScreen(
-                                context,
-                                const SignUpScreen(),
+                        SizedBox(height: 30.h),
+                        _buildLabel("Email*"),
+                        _buildTextField(
+                          controller: _emailController,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Email is required';
+                            }
+                            if (!value.trim().endsWith('@gmail.com')) {
+                              return 'Must be a valid Gmail address';
+                            }
+                            return null;
+                          },
+                        ),
+                        _buildLabel("Password*"),
+                        _buildPasswordField(),
+                        SizedBox(height: 20.h),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2D3A8C),
+                              padding: EdgeInsets.symmetric(vertical: 14.h),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24.r),
                               ),
-                          child: RichText(
-                            text: TextSpan(
-                              text: "Don’t have an account? ",
+                            ),
+                            onPressed: _handleLogin,
+                            child: Text(
+                              "Log in",
                               style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 14.sp,
+                                fontSize: 16.sp,
+                                color: Colors.white,
                               ),
-                              children: [
-                                TextSpan(
-                                  text: 'Sign up',
-                                  style: TextStyle(
-                                    color: const Color(0xFF2D3A8C),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: 20.h),
-                    ],
+                        SizedBox(height: 20.h),
+                        Center(
+                          child: TextButton(
+                            onPressed: () =>
+                                _navigateToScreen(context, const SignUpScreen()),
+                            child: RichText(
+                              text: TextSpan(
+                                text: "Don’t have an account? ",
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 14.sp,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: 'Sign up',
+                                    style: TextStyle(
+                                      color: const Color(0xFF2D3A8C),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20.h),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -184,15 +134,73 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    String email = _emailController.text.trim();
+    String password = _passwordController.text;
+
+    var user = await MongoDatabase.getUserByEmail(email);
+
+    if (user == null) {
+      _formKey.currentState!.validate(); // trigger UI update
+      IconSnackBar.show(
+        context: context,
+        snackBarType: SnackBarType.error,
+        label: 'User not found',
+      );
+
+      return;
+    }
+
+
+    if (user['role'] != 'student') {
+      IconSnackBar.show(
+        context: context,
+        snackBarType: SnackBarType.error,
+        label: 'You are not authorized to log in',
+      );
+      return;
+
+    }
+
+    bool passwordMatch = BCrypt.checkpw(password, user['password']);
+    if (!passwordMatch) {
+      IconSnackBar.show(
+        context: context,
+        snackBarType: SnackBarType.error,
+        label: 'Incorrect password',
+      );
+      return;
+    }
+
+    await _saveLoginState(user['email']);
+    IconSnackBar.show(
+      context: context,
+      snackBarType: SnackBarType.success,
+      label: 'Login successful!',
+    );
+
+    // _navigateToScreen(
+    //        context,
+    //   LocationScreen(userName: user['email']),
+    //  // HomeScreen(userName: user['email']),
+    // );
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LocationScreen(userName: user['email']),
+      ),
+    );
+  }
+
+
 
   Future<void> _saveLoginState(String userName) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', true);
     await prefs.setString('userName', userName);
   }
-
-
-
 
   void _navigateToScreen(BuildContext context, Widget screen) {
     Navigator.pushReplacement(
@@ -208,8 +216,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// ✅ Added missing helper methods
-
   Widget _buildLabel(String label) {
     return Padding(
       padding: EdgeInsets.only(bottom: 6.h),
@@ -224,18 +230,19 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller}) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String? Function(String?) validator,
+  }) {
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
-      child: TextField(
+      child: TextFormField(
         controller: controller,
+        validator: validator,
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
-          contentPadding: EdgeInsets.symmetric(
-            vertical: 14.h,
-            horizontal: 16.w,
-          ),
+          contentPadding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24.r),
             borderSide: const BorderSide(color: Colors.grey),
@@ -248,16 +255,20 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildPasswordField() {
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
-      child: TextField(
+      child: TextFormField(
         obscureText: _obscurePassword,
         controller: _passwordController,
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return 'Password is required';
+          }
+
+          return null;
+        },
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
-          contentPadding: EdgeInsets.symmetric(
-            vertical: 14.h,
-            horizontal: 16.w,
-          ),
+          contentPadding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24.r),
             borderSide: const BorderSide(color: Colors.grey),
