@@ -18,12 +18,21 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
 
+  final _formKey = GlobalKey<FormState>();
+
+
   final TextEditingController _studentIDController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _middleNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    print('RegisterPage initState'); // Should not print again when returning
+  }
 
   @override
   void dispose() {
@@ -35,12 +44,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _passwordController.dispose();
     super.dispose();
   }
+
   bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
-
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
@@ -176,12 +184,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ),
                             );
 
-                            _studentIDController.clear();
-                            _firstNameController.clear();
-                            _middleNameController.clear();
-                            _lastNameController.clear();
-                            _emailController.clear();
-                            _passwordController.clear();
+                            // _studentIDController.clear();
+                            // _firstNameController.clear();
+                            // _middleNameController.clear();
+                            // _lastNameController.clear();
+                            // _emailController.clear();
+                            // _passwordController.clear();
 
                           },
 
