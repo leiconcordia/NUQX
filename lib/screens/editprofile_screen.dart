@@ -6,6 +6,8 @@ import '../widgets/custom_header_with_title.dart';
 import '../widgets/custom_footer.dart';
 import 'package:flutter_application_1/utils/icon_snackbar.dart';
 import 'dart:convert';
+import '../widgets/main_scaffold.dart';
+
 
 import 'package:image_picker/image_picker.dart';
 
@@ -230,7 +232,13 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              MainScaffold(userName: widget.userName, initialTabIndex: 2),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -315,10 +323,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  MenuScreen(userName: widget.userName),
+                                  MainScaffold(userName: widget.userName, initialTabIndex: 2),
                             ),
                           );
                         },
+
+
+
+
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2D3A8C),
                           padding: EdgeInsets.symmetric(

@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:mongo_dart/mongo_dart.dart';
 import 'package:flutter_application_1/DBHelper/constant.dart';
 
@@ -13,6 +12,8 @@ class MongoDatabase {
 
   static Future<void> connect() async {
     try {
+
+
       db = await Db.create(MONGO_CONN_URL);
       await db.open();
       inspect(db);
@@ -20,8 +21,13 @@ class MongoDatabase {
       queueNumbersCollection = db.collection(QUEUE_NUMBERS);
       transactionCollection = db.collection(TRANSACTIONS);
       userCollection = db.collection(USER_COLLECTION);
+      print('✅ Connected to MongoDB');
+      print('🟡 DB state: ${db.state}');
+      print('🟡 Connected: ${db.isConnected}');
 
-      print("✅ MongoDB connected!");
+      userCollection = db.collection(USER_COLLECTION);
+
+
     } catch (e) {
       print("❌ Error connecting to MongoDB: $e");
     }
@@ -33,6 +39,10 @@ class MongoDatabase {
 //signin
   static Future<Map<String, dynamic>?> getUserByEmail(String email) async {
     try {
+      if (!db.isConnected) {
+        print("🔄 Reconnecting to MongoDB...");
+        await db.open(); // Reopen if disconnected
+      }
       final user = await userCollection.findOne({'email': email});
 
       if (user != null) {
@@ -50,6 +60,15 @@ class MongoDatabase {
 //Signup
   static Future<void> insertUser(Map<String, dynamic> userData) async {
     try {
+      if (!db.isConnected) {
+        print("🔄 Reconnecting to MongoDB...");
+        await db.open(); // Reopen if disconnected
+      }
+
+      print("🟡 DB state: ${db.state}");
+      print("🟡 Connected: ${db.isConnected}");
+      print("🟡 Inserting: $userData");
+
       await userCollection.insertOne(userData);
       print("✅ User inserted successfully");
     } catch (e) {
@@ -57,8 +76,10 @@ class MongoDatabase {
     }
   }
 
+
 //ID VALIDATION DURING SIGNUP
   static Future<dynamic> getUserByStudentID(String studentID) async {
+
     final user = await userCollection.findOne({"studentID": studentID});
     return user;
   }
@@ -108,6 +129,11 @@ class MongoDatabase {
   //Insert Queue in
   static Future<void> insertQueueNumber(Map<String, dynamic> QueueData) async {
     try {
+      if (!db.isConnected) {
+        print("🔄 Reconnecting to MongoDB...");
+        await db.open(); // Reopen if disconnected
+      }
+
       await   queueNumbersCollection.insertOne(QueueData);
       print("✅ Queue inserted successfully");
     } catch (e) {
@@ -117,6 +143,10 @@ class MongoDatabase {
 
   static Future<String> generateQueueNumber(String transactionID, String transactionName) async {
     try {
+      if (!db.isConnected) {
+        print("🔄 Reconnecting to MongoDB...");
+        await db.open(); // Reopen if disconnected
+      }
       final count = await queueNumbersCollection.count(
         where.eq('transactionName', transactionName),
       );
@@ -171,6 +201,57 @@ class MongoDatabase {
 
 
 
+  // static Future<Map<String, dynamic>> getQueueWaitInfo(String email) async {
+  //   try {
+  //     // Step 1: Get user's queue with status "waiting"
+  //     final userQueue = await queueNumbersCollection.findOne(
+  //       where.eq('user', email).eq('status', 'Waiting'),
+  //     );
+  //
+  //     if (userQueue == null || userQueue['transactionName'] == null) {
+  //       print("❌ No active waiting queue found for this user.");
+  //       return {
+  //         "peopleInWaiting": 0,
+  //         "approxWaitTime": "0 min",
+  //       };
+  //     }
+  //
+  //
+  //     // Step 2: Count all waiting queues with the same transactionName
+  //     final totalWaiting = await queueNumbersCollection.count({
+  //
+  //       'status': 'Waiting',
+  //     });
+  //
+  //     // Step 3: Subtract current user's queue from total
+  //     final othersWaiting = (totalWaiting > 0) ? totalWaiting : 0;
+  //
+  //     // Step 4: Calculate approx wait time in minutes
+  //     final totalMinutes = othersWaiting * 5;
+  //
+  //     // Step 5: Format time string
+  //     final hours = totalMinutes ~/ 60;
+  //     final minutes = totalMinutes % 60;
+  //     String waitTimeFormatted = hours > 0
+  //         ? "$hours hr${hours > 1 ? 's' : ''} ${minutes} min"
+  //         : "$minutes min";
+  //
+  //     return {
+  //       "peopleInWaiting": othersWaiting,
+  //       "approxWaitTime": waitTimeFormatted,
+  //     };
+  //   } catch (e) {
+  //     print("❌ Error calculating queue wait info: $e");
+  //     return {
+  //       "peopleInWaiting": 0,
+  //       "approxWaitTime": "0 min",
+  //     };
+  //
+  //
+  //   }
+  //
+  // }
+  //
   static Future<String?> getNowServingForUser(String userName) async {
     try {
       // 1. Find user's waiting queue
@@ -208,14 +289,15 @@ class MongoDatabase {
     }
   }
 
+
   static Future<Map<String, dynamic>> getQueueWaitInfo(String email) async {
     try {
-      // Step 1: Get user's queue with status "waiting"
+      // Step 1: Get user's active waiting queue
       final userQueue = await queueNumbersCollection.findOne(
         where.eq('user', email).eq('status', 'Waiting'),
       );
 
-      if (userQueue == null || userQueue['transactionName'] == null) {
+      if (userQueue == null) {
         print("❌ No active waiting queue found for this user.");
         return {
           "peopleInWaiting": 0,
@@ -223,44 +305,54 @@ class MongoDatabase {
         };
       }
 
-      final transactionName = userQueue['transactionName'];
+      // Step 2: Get all completed queues (no filter on transactionName)
+      final completedQueues = await queueNumbersCollection.find({
+        'status': 'Completed',
+        'processingTime': {'\$exists': true}
+      }).toList();
 
-      // Step 2: Count all waiting queues with the same transactionName
-      final totalWaiting = await queueNumbersCollection.count({
-        'transactionName': transactionName,
-        'status': 'Waiting',
-      });
+      // Step 3: Calculate average processing time (in seconds)
+      double averageProcessingSeconds = 300; // default = 5 mins = 300 sec
+      if (completedQueues.isNotEmpty) {
+        final totalSeconds = completedQueues
+            .map((e) => (e['processingTime'] as num?) ?? 0)
+            .reduce((a, b) => a + b);
+        averageProcessingSeconds = totalSeconds / completedQueues.length;
+      }
 
-      // Step 3: Subtract current user's queue from total
-      final othersWaiting = (totalWaiting > 0) ? totalWaiting : 0;
+      // Step 4: Count users still waiting before this user
+// Step 4: Count users still waiting before this user
+      final allWaiting = await queueNumbersCollection
+          .find(where.eq('status', 'Waiting').sortBy('createdAt'))
+          .toList();
 
-      // Step 4: Calculate approx wait time in minutes
-      final totalMinutes = othersWaiting * 5;
+      final userIndex = allWaiting.indexWhere((doc) => doc['_id'] == userQueue['_id']);
+      final othersWaitingAhead = userIndex == -1 ? 0 : userIndex;
 
-      // Step 5: Format time string
-      final hours = totalMinutes ~/ 60;
-      final minutes = totalMinutes % 60;
+      // Step 5: Calculate estimated wait time
+      final totalWaitSeconds = othersWaitingAhead * averageProcessingSeconds;
+      final hours = totalWaitSeconds ~/ 3600;
+      final minutes = (totalWaitSeconds % 3600) ~/ 60;
+
       String waitTimeFormatted = hours > 0
           ? "$hours hr${hours > 1 ? 's' : ''} ${minutes} min"
           : "$minutes min";
 
       return {
-        "peopleInWaiting": othersWaiting,
+        "peopleInWaiting": othersWaitingAhead,
         "approxWaitTime": waitTimeFormatted,
       };
     } catch (e) {
       print("❌ Error calculating queue wait info: $e");
       return {
         "peopleInWaiting": 0,
-        "approxWaitTime": "0 min",
+        "approxWaitTime": "5 min", // default fallback
       };
-
-
     }
-
   }
 
-    static Future<Map<String, dynamic>> getUserQueueStatus(String email) async {
+
+  static Future<Map<String, dynamic>> getUserQueueStatus(String email) async {
       try {
         final userQueue = await queueNumbersCollection.findOne(
           where.eq('user', email).sortBy('createdAt', descending: true));

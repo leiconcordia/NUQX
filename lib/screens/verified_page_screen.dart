@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/location_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/custom_footer.dart';
 import '../widgets/custom_header.dart';
@@ -56,10 +57,10 @@ class VerifiedPage extends StatelessWidget {
                         ),
                       ),
                       onPressed: () {
-                        Navigator.pushAndRemoveUntil(
+                        Navigator.push(
                           context,
-                          noAnimationRoute(HomeScreen(userName: userName)),
-                          (route) => false,
+                          noAnimationRoute(LocationScreen(userName: userName)),
+
                         );
                       },
                       child: Text(

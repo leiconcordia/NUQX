@@ -167,7 +167,7 @@ class _MenuScreenState extends State<MenuScreen> {
 
                     // Menu Items
                     _buildMenuItem(Icons.person_outline, 'My Profile', () {
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) => ProfileEditScreen(userName : widget.userName),

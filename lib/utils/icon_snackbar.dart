@@ -12,6 +12,8 @@ class IconSnackBar {
     final backgroundColor = _getBackgroundColor(snackBarType);
     final icon = _getIcon(snackBarType);
 
+    final topPadding = MediaQuery.of(context).padding.top;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
@@ -36,7 +38,7 @@ class IconSnackBar {
           borderRadius: BorderRadius.circular(8.r),
         ),
         margin: EdgeInsets.only(
-          bottom: MediaQuery.of(context).size.height - 107, // Position near top
+          bottom: MediaQuery.of(context).size.height - 107, // 🔼 top padding + offset
           left: 20.w,
           right: 20.w,
         ),

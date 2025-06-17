@@ -134,7 +134,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+
+
   Future<void> _handleLogin() async {
+
     if (!_formKey.currentState!.validate()) return;
 
     String email = _emailController.text.trim();
@@ -173,6 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return;
     }
+
 
     await _saveLoginState(user['email']);
     IconSnackBar.show(

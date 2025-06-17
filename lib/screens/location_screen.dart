@@ -4,6 +4,7 @@ import '../widgets/custom_header.dart';
 import '../widgets/main_scaffold.dart';
 import '../widgets/custom_footer.dart';
 import 'home_screen.dart';
+import 'package:flutter_application_1/DBHelper/mongodb.dart';
 
 class LocationScreen extends StatefulWidget {
   final String userName;
@@ -16,11 +17,38 @@ class LocationScreen extends StatefulWidget {
 
 class _LocationScreenState extends State<LocationScreen> {
   bool locationEnabled = false;
+  Map<String, dynamic>? user;
+
 
   @override
   void initState() {
     super.initState();
+    fetchUserData();
     _checkAndHandleLocation();
+
+  }
+
+  Future<void> fetchUserData() async {
+    try {
+      final fetchedUser = await MongoDatabase.getUserByEmail(widget.userName);
+      setState(() {
+        user = fetchedUser;
+      });
+
+      if (fetchedUser == null) {
+        // Optional: Handle case where user wasn't found
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not found')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        user = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching user: $e')),
+      );
+    }
   }
 
   Future<void> _checkAndHandleLocation() async {
@@ -71,18 +99,6 @@ class _LocationScreenState extends State<LocationScreen> {
 
 
 
-  Future<void> _checkLocationStatus() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    LocationPermission permission = await Geolocator.checkPermission();
-
-    if (serviceEnabled &&
-        (permission == LocationPermission.always ||
-            permission == LocationPermission.whileInUse)) {
-      setState(() {
-        locationEnabled = true;
-      });
-    }
-  }
 
   Future<void> _getUserLocation() async {
     showLoadingDialog(context);
@@ -199,6 +215,11 @@ class _LocationScreenState extends State<LocationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(

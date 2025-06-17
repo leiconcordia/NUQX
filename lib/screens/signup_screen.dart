@@ -59,7 +59,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 50.h),
+                        SizedBox(height: 20.h),
                         Center(
                           child: Text(
                             "Welcome to NUQX!",
@@ -70,7 +70,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 30.h),
+                        SizedBox(height: 20.h),
                         _buildLabel("Student ID*"),
                         _buildTextField(
                           controller: _studentIDController,
@@ -219,7 +219,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ),
             ),
-            const CustomFooter(),
+            //const CustomFooter(),
           ],
         ),
       ),
@@ -264,10 +264,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         controller: controller,
         validator: validator,
         decoration: InputDecoration(
+          isDense: true, // 🔹 Makes the field more compact vertically
           filled: true,
           fillColor: Colors.white,
           contentPadding: EdgeInsets.symmetric(
-            vertical: 8.h,
+            vertical: 6.h, // 🔹 Smaller vertical padding
             horizontal: 16.w,
           ),
           border: OutlineInputBorder(
@@ -290,29 +291,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
         obscureText: _obscurePassword,
         validator: validator,
         decoration: InputDecoration(
+          isDense: true,
           filled: true,
           fillColor: Colors.white,
           contentPadding: EdgeInsets.symmetric(
-            vertical: 8.h,
+            vertical: 6.h,
             horizontal: 16.w,
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24.r),
             borderSide: const BorderSide(color: Colors.grey),
           ),
-          suffixIcon: IconButton(
-            icon: Icon(
-              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-              color: Colors.grey,
+          suffixIcon: SizedBox(
+            height: 20.h, // 🔹 Set height to match the field
+            child: IconButton(
+              iconSize: 15.w, // 🔹 Make the icon smaller if needed
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: Colors.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
             ),
-            onPressed: () {
-              setState(() {
-                _obscurePassword = !_obscurePassword;
-              });
-            },
           ),
         ),
       ),
     );
   }
+
 }

@@ -162,7 +162,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       );
       return;
     }
-    await Future.delayed(const Duration(seconds: 3));
+  //  await Future.delayed(const Duration(seconds: 3));
     // ✅ Insert user into DB after OTP verification
       Map<String, dynamic> newUser = {
         "studentID": widget.studentID,

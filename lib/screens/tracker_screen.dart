@@ -99,7 +99,7 @@ class _TrackerScreen extends State<TrackerScreen> {
 
     if (mounted) {
       setState(() {
-        peopleInWaiting = result["peopleInWaiting"];
+        peopleInWaiting = result["peopleInWaiting"] ;
         approxWaitTime = result["approxWaitTime"];
       });
     }
