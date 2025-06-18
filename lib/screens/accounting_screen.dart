@@ -32,7 +32,7 @@ class _AccountingScreen extends State<AccountingScreen> {
 
   Future<void> loadTransactions() async {
     transactions =
-    await MongoDatabase.getTransactionsByDepartment("accounting");
+    await MongoDatabase.getTransactionsByDepartment("treasury");
     setState(() {});
   }
 

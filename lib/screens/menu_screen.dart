@@ -124,7 +124,6 @@ class _MenuScreenState extends State<MenuScreen> {
                     SizedBox(height: 20.h),
 
                     GestureDetector(
-                      onTap: () => _pickAndUploadImage(context),
                       child: CircleAvatar(
                         radius: 50.r,
                         backgroundImage: user!['profileImage'] != null
@@ -167,7 +166,7 @@ class _MenuScreenState extends State<MenuScreen> {
 
                     // Menu Items
                     _buildMenuItem(Icons.person_outline, 'My Profile', () {
-                      Navigator.pushReplacement(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => ProfileEditScreen(userName : widget.userName),

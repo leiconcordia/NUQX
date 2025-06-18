@@ -232,6 +232,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () {
+                     // Navigator.pop(context);
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
@@ -313,11 +314,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                             selectedYearLevel!.trim(),
                           );
 
-                          IconSnackBar.show(
-                            context: context,
-                            snackBarType: SnackBarType.success,
-                            label: 'Profile updated!',
-                          );
+                          // IconSnackBar.show(
+                          //   context: context,
+                          //   snackBarType: SnackBarType.success,
+                          //   label: 'Profile updated!',
+                          // );
 
                           Navigator.pushReplacement(
                             context,

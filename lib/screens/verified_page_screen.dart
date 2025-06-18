@@ -57,7 +57,7 @@ class VerifiedPage extends StatelessWidget {
                         ),
                       ),
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.pushReplacement(
                           context,
                           noAnimationRoute(LocationScreen(userName: userName)),
 

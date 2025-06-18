@@ -156,7 +156,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                               final hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
-                              bool? result = await Navigator.push(
+                              bool? result = await Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => OTPVerificationScreen(

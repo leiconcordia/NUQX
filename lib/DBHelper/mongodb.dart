@@ -145,24 +145,76 @@ class MongoDatabase {
     try {
       if (!db.isConnected) {
         print("🔄 Reconnecting to MongoDB...");
-        await db.open(); // Reopen if disconnected
+        await db.open();
       }
-      final count = await queueNumbersCollection.count(
-        where.eq('transactionName', transactionName),
+
+      // Step 1: Check if IDReset is true
+      final transaction = await transactionCollection.findOne(
+        where.eq('name', transactionName),
       );
 
-      final newNumber = count + 1;
-      final paddedNumber = newNumber.toString().padLeft(3, '0'); // 001, 002, etc.
-      return '$transactionID$paddedNumber'; // ENR006
+      if (transaction == null) {
+        print("❌ Transaction not found.");
+        return '${transactionID}001';
+      }
+
+      if (transaction['isIDReset'] == true) {
+        await transactionCollection.update(
+          where.eq('name', transactionName),
+          modify.set('isIDReset', false),
+        );
+        print("🔁 Resetting queue to ${transactionID}001");
+        return '${transactionID}001';
+      }
+
+      // Step 2: Get latest queue with same transactionName, ordered by createdAt
+      final cursor = queueNumbersCollection.find(
+        where.eq('transactionName', transactionName).sortBy('createdAt', descending: true),
+      );
+      final latestQueueList = await cursor.toList();
+
+      if (latestQueueList.isEmpty) {
+        print("📭 No previous queues found. Returning ${transactionID}001");
+        return '${transactionID}001';
+      }
+
+      final latestQueue = latestQueueList.first;
+      final latestGenerated = latestQueue['generatedQueuenumber'] as String;
+
+      // Debug print to confirm we're extracting correctly
+      print("🔢 Latest generated queue: $latestGenerated");
+
+      // Step 3: Remove prefix and convert numeric part
+      final numericPart = latestGenerated
+          .replaceFirst(transactionID, '')          // Remove prefix
+          .replaceAll(RegExp(r'[^\d]'), '');        // Keep digits only
+
+      final latestNumber = int.tryParse(numericPart) ?? 0;
+
+
+      final newNumber = latestNumber + 1;
+      final paddedNumber = newNumber.toString().padLeft(3, '0');
+
+      final newQueueNumber = '$transactionID$paddedNumber';
+      print("✅ New queue number generated: $newQueueNumber");
+
+      return newQueueNumber;
     } catch (e) {
       print("❌ Failed to generate queue number: $e");
       return '${transactionID}001';
-
     }
   }
 
+
+
+
+
   static Future<Map<String, dynamic>?> getQueueInfoByEmail(String email) async {
     try {
+      if (!db.isConnected) {
+        print("🔄 Reconnecting to MongoDB...");
+        await db.open(); // Reopen if disconnected
+      }
       final result = await queueNumbersCollection.findOne(
         where
             .eq('user', email)
@@ -187,6 +239,10 @@ class MongoDatabase {
 
   static Future<bool> hasActiveQueue(String email) async {
     try {
+      if (!db.isConnected) {
+        print("🔄 Reconnecting to MongoDB...");
+        await db.open(); // Reopen if disconnected
+      }
       final activeQueue = await queueNumbersCollection.findOne({
         'user': email,
         'status': {'\$in': ['Waiting', 'Processing']},
@@ -252,8 +308,50 @@ class MongoDatabase {
   //
   // }
   //
-  static Future<String?> getNowServingForUser(String userName) async {
+  // static Future<String?> getNowServingForUser(String userName) async {
+  //   try {
+
+  //     // 1. Find user's waiting queue
+  //     final userQueue = await queueNumbersCollection.findOne(
+  //       where.eq('user', userName).eq('status', 'Waiting'),
+  //     );
+  //
+  //     if (userQueue == null) {
+  //       print("❌ No waiting queue found for user: $userName");
+  //       return null;
+  //     }
+  //
+  //     final String transactionName = userQueue['transactionName'];
+  //     final String department = userQueue['department'];
+  //
+  //     // 2. Find processing queue for same transaction and department
+  //     final processingQueue = await queueNumbersCollection.findOne(
+  //       where
+  //          // .eq('transactionName', transactionName)
+  //           .eq('department', department)
+  //           .eq('status', 'Processing'),
+  //     );
+  //
+  //     if (processingQueue != null) {
+  //       final queueNum = processingQueue['generatedQueuenumber'];
+  //       print("✅ Now serving for $transactionName: $queueNum");
+  //       return queueNum;
+  //     } else {
+  //       print("ℹ️ No processing queue for $transactionName in $department");
+  //       return null;
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error in getNowServingForUser: $e");
+  //     return null;
+  //   }
+  // }
+
+  static Future<List<String>> getAllNowServingForUser(String userName) async {
     try {
+      if (!db.isConnected) {
+        print("🔄 Reconnecting to MongoDB...");
+        await db.open(); // Reopen if disconnected
+      }
       // 1. Find user's waiting queue
       final userQueue = await queueNumbersCollection.findOne(
         where.eq('user', userName).eq('status', 'Waiting'),
@@ -261,37 +359,44 @@ class MongoDatabase {
 
       if (userQueue == null) {
         print("❌ No waiting queue found for user: $userName");
-        return null;
+        return [];
       }
 
-      final String transactionName = userQueue['transactionName'];
+
       final String department = userQueue['department'];
 
-      // 2. Find processing queue for same transaction and department
-      final processingQueue = await queueNumbersCollection.findOne(
+      // 2. Find all processing queues for the same department
+      final processingQueues = await queueNumbersCollection.find(
         where
-            .eq('transactionName', transactionName)
             .eq('department', department)
             .eq('status', 'Processing'),
-      );
+      ).toList();
 
-      if (processingQueue != null) {
-        final queueNum = processingQueue['generatedQueuenumber'];
-        print("✅ Now serving for $transactionName: $queueNum");
-        return queueNum;
+      if (processingQueues.isNotEmpty) {
+        final queueNumbers = processingQueues
+            .map((q) => q['generatedQueuenumber'].toString())
+            .toList();
+
+        print("✅ Now serving in $department: $queueNumbers");
+        return queueNumbers;
       } else {
-        print("ℹ️ No processing queue for $transactionName in $department");
-        return null;
+        print("ℹ️ No processing queues found in $department");
+        return [];
       }
     } catch (e) {
-      print("❌ Error in getNowServingForUser: $e");
-      return null;
+      print("❌ Error in getAllNowServingForUser: $e");
+      return [];
     }
   }
 
 
+
   static Future<Map<String, dynamic>> getQueueWaitInfo(String email) async {
     try {
+      if (!db.isConnected) {
+        print("🔄 Reconnecting to MongoDB...");
+        await db.open(); // Reopen if disconnected
+      }
       // Step 1: Get user's active waiting queue
       final userQueue = await queueNumbersCollection.findOne(
         where.eq('user', email).eq('status', 'Waiting'),
@@ -321,12 +426,21 @@ class MongoDatabase {
       }
 
       // Step 4: Count users still waiting before this user
-// Step 4: Count users still waiting before this user
-      final allWaiting = await queueNumbersCollection
-          .find(where.eq('status', 'Waiting').sortBy('createdAt'))
+      // final allWaiting = await queueNumbersCollection
+      //     .find(where.eq('status', 'Waiting').sortBy('createdAt'))
+      //     .toList();
+
+      final String department = userQueue['department'];
+
+      // ✅ Step 4: Get waiting users in same department
+      final departmentWaiting = await queueNumbersCollection
+          .find(where
+          .eq('status', 'Waiting')
+          .eq('department', department)
+          .sortBy('createdAt'))
           .toList();
 
-      final userIndex = allWaiting.indexWhere((doc) => doc['_id'] == userQueue['_id']);
+      final userIndex = departmentWaiting.indexWhere((doc) => doc['_id'] == userQueue['_id']);
       final othersWaitingAhead = userIndex == -1 ? 0 : userIndex;
 
       // Step 5: Calculate estimated wait time
@@ -354,6 +468,10 @@ class MongoDatabase {
 
   static Future<Map<String, dynamic>> getUserQueueStatus(String email) async {
       try {
+        if (!db.isConnected) {
+          print("🔄 Reconnecting to MongoDB...");
+          await db.open(); // Reopen if disconnected
+        }
         final userQueue = await queueNumbersCollection.findOne(
           where.eq('user', email).sortBy('createdAt', descending: true));
 
@@ -379,6 +497,8 @@ class MongoDatabase {
         };
       }
     }
+
+
 
   // Save base64 profile image to the user's document
   static Future<void> setProfileImage(String email, String base64Image) async {
