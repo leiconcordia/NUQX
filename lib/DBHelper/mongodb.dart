@@ -310,7 +310,7 @@ class MongoDatabase {
   //
   // static Future<String?> getNowServingForUser(String userName) async {
   //   try {
-
+  //
   //     // 1. Find user's waiting queue
   //     final userQueue = await queueNumbersCollection.findOne(
   //       where.eq('user', userName).eq('status', 'Waiting'),
@@ -327,9 +327,10 @@ class MongoDatabase {
   //     // 2. Find processing queue for same transaction and department
   //     final processingQueue = await queueNumbersCollection.findOne(
   //       where
-  //          // .eq('transactionName', transactionName)
+  //       // .eq('transactionName', transactionName)
   //           .eq('department', department)
   //           .eq('status', 'Processing'),
+  //
   //     );
   //
   //     if (processingQueue != null) {
@@ -346,12 +347,9 @@ class MongoDatabase {
   //   }
   // }
 
-  static Future<List<String>> getAllNowServingForUser(String userName) async {
+
+  static Future<String?> getNowServingForUser(String userName) async {
     try {
-      if (!db.isConnected) {
-        print("🔄 Reconnecting to MongoDB...");
-        await db.open(); // Reopen if disconnected
-      }
       // 1. Find user's waiting queue
       final userQueue = await queueNumbersCollection.findOne(
         where.eq('user', userName).eq('status', 'Waiting'),
@@ -359,35 +357,77 @@ class MongoDatabase {
 
       if (userQueue == null) {
         print("❌ No waiting queue found for user: $userName");
-        return [];
+        return null;
       }
 
-
+      final String transactionName = userQueue['transactionName'];
       final String department = userQueue['department'];
 
-      // 2. Find all processing queues for the same department
-      final processingQueues = await queueNumbersCollection.find(
-        where
-            .eq('department', department)
-            .eq('status', 'Processing'),
-      ).toList();
+      // 2. Find latest processing queue in the same department (by updatedAt)
+      final cursor = queueNumbersCollection.find(
+        where.eq('department', department).eq('status', 'Processing').sortBy('updatedAt', descending: true),
+      );
 
-      if (processingQueues.isNotEmpty) {
-        final queueNumbers = processingQueues
-            .map((q) => q['generatedQueuenumber'].toString())
-            .toList();
+      final processingList = await cursor.toList();
+      final latestProcessing = processingList.isNotEmpty ? processingList.first : null;
 
-        print("✅ Now serving in $department: $queueNumbers");
-        return queueNumbers;
+      if (latestProcessing != null) {
+        final queueNum = latestProcessing['generatedQueuenumber'];
+        print("✅ Now serving for $transactionName in $department: $queueNum");
+        return queueNum;
       } else {
-        print("ℹ️ No processing queues found in $department");
-        return [];
+        print("ℹ️ No processing queue found for $transactionName in $department");
+        return null;
       }
     } catch (e) {
-      print("❌ Error in getAllNowServingForUser: $e");
-      return [];
+      print("❌ Error in getNowServingForUser: $e");
+      return null;
     }
   }
+
+
+  // static Future<List<String>> getAllNowServingForUser(String userName) async {
+  //   try {
+  //     if (!db.isConnected) {
+  //       print("🔄 Reconnecting to MongoDB...");
+  //       await db.open(); // Reopen if disconnected
+  //     }
+  //     // 1. Find user's waiting queue
+  //     final userQueue = await queueNumbersCollection.findOne(
+  //       where.eq('user', userName).eq('status', 'Waiting'),
+  //     );
+  //
+  //     if (userQueue == null) {
+  //       print("❌ No waiting queue found for user: $userName");
+  //       return [];
+  //     }
+  //
+  //
+  //     final String department = userQueue['department'];
+  //
+  //     // 2. Find all processing queues for the same department
+  //     final processingQueues = await queueNumbersCollection.find(
+  //       where
+  //           .eq('department', department)
+  //           .eq('status', 'Processing'),
+  //     ).toList();
+  //
+  //     if (processingQueues.isNotEmpty) {
+  //       final queueNumbers = processingQueues
+  //           .map((q) => q['generatedQueuenumber'].toString())
+  //           .toList();
+  //
+  //       print("✅ Now serving in $department: $queueNumbers");
+  //       return queueNumbers;
+  //     } else {
+  //       print("ℹ️ No processing queues found in $department");
+  //       return [];
+  //     }
+  //   } catch (e) {
+  //     print("❌ Error in getAllNowServingForUser: $e");
+  //     return [];
+  //   }
+  // }
 
 
 

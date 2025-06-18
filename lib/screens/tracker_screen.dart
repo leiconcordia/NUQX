@@ -27,7 +27,9 @@ class _TrackerScreen extends State<TrackerScreen> {
 
   bool isLoading = true;
   Timer? _refreshTimer;
-  List<String> nowServingQueueNumbers = [];
+  //List<String> nowServingQueueNumbers = [];
+  String? nowServingQueueNumber;
+
   int peopleInWaiting = 0;
   String approxWaitTime = "0 min";
   String queueStatus = '-';
@@ -107,10 +109,10 @@ class _TrackerScreen extends State<TrackerScreen> {
 
 
   Future<void> _loadNowServing() async {
-    final nowServingList = await MongoDatabase.getAllNowServingForUser(widget.userName);
+    final nowServing = await MongoDatabase.getNowServingForUser(widget.userName);
     if (mounted) {
       setState(() {
-        nowServingQueueNumbers = nowServingList;
+        nowServingQueueNumber = nowServing;
       });
     }
   }
@@ -218,20 +220,21 @@ class _TrackerScreen extends State<TrackerScreen> {
   Widget _buildProgressIndicator({required int peopleInWaiting}) {
     int activeIndex;
 
-    // Define how many circles should be filled
-    if (peopleInWaiting >= 5) {
+    if (peopleInWaiting >= 4) {
       activeIndex = 1;
-    } else if (peopleInWaiting == 4) {
-      activeIndex = 2;
     } else if (peopleInWaiting == 3) {
+      activeIndex = 2;
+    } else if (peopleInWaiting == 2) {
       activeIndex = 3;
     } else if (peopleInWaiting == 1) {
       activeIndex = 4;
     } else if (peopleInWaiting == 0) {
-      activeIndex = 4;
+      activeIndex = 5;
     } else {
-      activeIndex = -1; // none filled
+      activeIndex = -1; // fallback for invalid negative values
     }
+
+
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -293,29 +296,15 @@ class _TrackerScreen extends State<TrackerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            "Now Serving",
-            style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500),
-          ),
-          SizedBox(height: 5.h),
-      Column(
-        children: nowServingQueueNumbers.isNotEmpty
-            ? nowServingQueueNumbers.map((queueNum) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: 4.h),
-            child: Text(
-              "Queue No. $queueNum",
-              style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
-            ),
-          );
-        }).toList()
-            : [
-          Text(
-            "Queue No. -",
-            style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
-          ),
-        ],
+        Text(
+        "Now Serving",
+        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500),
       ),
+        SizedBox(height: 5.h),
+        Text(
+          "Queue No. ${nowServingQueueNumber ?? '-'}",
+          style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+        ),
           SizedBox(height: 20.h),
           Text(
             "Your Queue Number",
