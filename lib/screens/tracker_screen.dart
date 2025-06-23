@@ -433,7 +433,7 @@ class _TrackerScreen extends State<TrackerScreen> {
           Text(
             queueNumber,
             style: TextStyle(
-              fontSize: 40.sp,
+              fontSize: 30.sp,
               fontWeight: FontWeight.bold,
               color: Color(0xFF2D3A8C),
             ),

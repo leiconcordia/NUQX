@@ -195,7 +195,7 @@ class MongoDatabase {
       final newNumber = latestNumber + 1;
       final paddedNumber = newNumber.toString().padLeft(3, '0');
 
-      final newQueueNumber = '$transactionID$paddedNumber';
+      final newQueueNumber = '$transactionID$paddedNumber -CS';
       print("✅ New queue number generated: $newQueueNumber");
 
       return newQueueNumber;

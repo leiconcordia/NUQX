@@ -130,6 +130,8 @@ class _LocationScreenState extends State<LocationScreen> {
 
       //NUP
       //14.604354869275541, 120.99453311592958
+      //NUP TRIMMED
+      //14.604355, 120.994533
 
       // Office coordinates
       const double officeLat = 11.1353796;
@@ -145,11 +147,13 @@ class _LocationScreenState extends State<LocationScreen> {
 
       // Output
       print('📍 User location: Lat ${position.latitude}, Lng ${position.longitude}');
+
       print('📏 Distance from office: ${distanceInMeters.toStringAsFixed(2)} meters');
 
       if (distanceInMeters <= 100) {
         print('✅ You are within range (100 meters)');
-        _showServiceAreaDialog();
+        //_showServiceAreaDialog();
+        _showServiceAreaDialog(position, distanceInMeters);
       } else {
         print('❌ You are outside the allowed range');
         _showOutOfRangeDialog(distanceInMeters); // <-- make sure this is called
@@ -164,14 +168,46 @@ class _LocationScreenState extends State<LocationScreen> {
   }
 
 
-  void _showServiceAreaDialog() {
+  // void _showServiceAreaDialog() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text("Service Area Confirmation"),
+  //         content: const Text(
+  //             "You are within the service area. You can now join the queue.\n"),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.pushReplacement(
+  //                 context,
+  //                 MaterialPageRoute(
+  //                   builder: (context) => MainScaffold(userName: widget.userName),
+  //                 ),
+  //               );
+  //             },
+  //             child: const Text("Continue"),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+
+
+  void _showServiceAreaDialog(Position position, double distanceInMeters) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Service Area Confirmation"),
-          content: const Text(
-              "You are within the service area. You can now join the queue."),
+          content: Text(
+            "✅ You are within the service area. You can now join the queue.\n\n"
+                "📍 User location:\n"
+                "Latitude: ${position.latitude}\n"
+                "Longitude: ${position.longitude}\n\n"
+                "📏 Distance from office: ${distanceInMeters.toStringAsFixed(2)} meters",
+          ),
           actions: [
             TextButton(
               onPressed: () {
@@ -189,6 +225,7 @@ class _LocationScreenState extends State<LocationScreen> {
       },
     );
   }
+
 
   void _showOutOfRangeDialog(double distanceInMeters) {
     showDialog(
