@@ -134,8 +134,8 @@ class _LocationScreenState extends State<LocationScreen> {
       //14.604355, 120.994533
 
       // Office coordinates
-      const double officeLat = 11.1353796;
-      const double officeLng = 124.551826;
+      const double officeLat = 14.604355;
+      const double officeLng = 120.994533;
 
       // Calculate distance
       double distanceInMeters = Geolocator.distanceBetween(
