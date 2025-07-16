@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/confirmationticket_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,6 +12,7 @@ import 'requestdocuments_form_screen.dart';
 import 'home_screen.dart';
 import 'package:flutter_application_1/DBHelper/mongodb.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
 
 class RegistrarScreen extends StatefulWidget {
   final String userName;
@@ -24,19 +27,34 @@ class RegistrarScreen extends StatefulWidget {
 class _RegistrarScreen extends State<RegistrarScreen> {
   Map<String, dynamic>? user;
   List<Map<String, dynamic>> transactions = [];
-
+  Timer? refreshTimer;
 
   @override
   void initState() {
     super.initState();
     fetchUserData();
     loadRegistrar();
+
+    // ✅ Auto-refresh every 10 seconds
+    refreshTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      loadRegistrar();
+    });
   }
+
+  @override
+  void dispose() {
+    refreshTimer?.cancel(); // ✅ Stop timer when screen is disposed
+    super.dispose();
+  }
+
+
   // fetch registrar transactions
   Future<void> loadRegistrar() async {
     transactions =
     await MongoDatabase.getTransactionsByDepartment("registrar");
-    setState(() {});
+    if(mounted){
+      setState(() {}); // ✅ Update UI when new transactions are fetched
+    }
   }
 
   Future<void> fetchUserData() async {
@@ -94,7 +112,8 @@ class _RegistrarScreen extends State<RegistrarScreen> {
               ],
             ),
             Expanded(
-              child: Padding(
+              child: SingleChildScrollView(
+               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -142,6 +161,7 @@ class _RegistrarScreen extends State<RegistrarScreen> {
 
                   ],
                 ),
+              ),
               ),
             ),
 

@@ -176,17 +176,18 @@ class _NotificationsScreen extends State<NotificationsScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showClearNotificationsDialog,
+        onPressed: notifications.isNotEmpty ? _showClearNotificationsDialog : null,
         tooltip: 'Clear Notifications',
-        backgroundColor: const Color(0xFF2D3A8C),
+        backgroundColor: notifications.isNotEmpty ? const Color(0xFF2D3A8C) : Colors.grey.shade400,
         child: Text(
           'Clear',
           style: TextStyle(
             fontSize: 12.sp,
-            color: Colors.white, // ✅ move color inside style
+            color: Colors.white,
           ),
         ),
       ),
+
 
     );
   }

@@ -118,12 +118,18 @@ class MongoDatabase {
     );
   }
 
+
+
   static Future<List<Map<String, dynamic>>> getTransactionsByDepartment(String department) async {
     final transactions = await transactionCollection
-        .find({'department': department.toLowerCase()})
+        .find({
+      'department': department.toLowerCase(),
+      'isHidden': false,
+    })
         .toList();
     return transactions;
   }
+
 
 
   //Insert Queue in

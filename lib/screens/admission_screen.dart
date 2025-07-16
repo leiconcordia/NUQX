@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/home_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,19 +24,33 @@ class AdmissionScreen extends StatefulWidget {
 class _AdmissionScreen extends State<AdmissionScreen> {
   Map<String, dynamic>? user;
   List<Map<String, dynamic>> transactions = [];
+  Timer? refreshTimer;
 
   @override
   void initState() {
     super.initState();
     fetchUserData();
     loadAdmission();
+
+    // ✅ Auto-refresh every 10 seconds
+    refreshTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      loadAdmission();
+    });
+  }
+
+  @override
+  void dispose() {
+    refreshTimer?.cancel(); // ✅ Stop timer when screen is disposed
+    super.dispose();
   }
 
   // fetch registrar transactions
   Future<void> loadAdmission() async {
     transactions =
     await MongoDatabase.getTransactionsByDepartment("admissions");
-    setState(() {});
+    if (mounted) {
+      setState(() {}); // ✅ Update UI when new transactions are fetched
+    }
   }
 
   Future<void> fetchUserData() async {
@@ -93,7 +109,8 @@ class _AdmissionScreen extends State<AdmissionScreen> {
               ],
             ),
             Expanded(
-              child: Padding(
+              child: SingleChildScrollView(
+               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -147,6 +164,7 @@ class _AdmissionScreen extends State<AdmissionScreen> {
 
                   ],
                 ),
+               ),
               ),
             ),
 

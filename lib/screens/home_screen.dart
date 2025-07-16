@@ -166,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToScreen(BuildContext context, Widget screen) {
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => screen),
     );

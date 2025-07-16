@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../utils/custom_page_route.dart';
@@ -22,18 +24,31 @@ class AccountingScreen extends StatefulWidget {
 class _AccountingScreen extends State<AccountingScreen> {
   Map<String, dynamic>? user;
   List<Map<String, dynamic>> transactions = [];
+  Timer? refreshTimer;
 
   @override
   void initState() {
     super.initState();
     fetchUserData();
     loadTransactions();
+
+    // ✅ Auto-refresh every 10 seconds
+    refreshTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+      loadTransactions();
+    });
+  }
+
+  @override
+  void dispose() {
+    refreshTimer?.cancel(); // ✅ Stop timer when screen is disposed
+    super.dispose();
   }
 
   Future<void> loadTransactions() async {
-    transactions =
-    await MongoDatabase.getTransactionsByDepartment("treasury");
-    setState(() {});
+    transactions = await MongoDatabase.getTransactionsByDepartment("treasury");
+    if (mounted) {
+      setState(() {}); // ✅ Update UI when new transactions are fetched
+    }
   }
 
   Future<void> fetchUserData() async {
@@ -191,11 +206,18 @@ class _AccountingScreen extends State<AccountingScreen> {
               ),
             ),
             SizedBox(height: 8.h),
-            Text(
-              transaction['name'] ?? 'Transaction',
-              style: TextStyle(color: Colors.white, fontSize: 14.sp),
-              textAlign: TextAlign.center,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 6.w),
+              child: Text(
+                transaction['name'] ?? 'Transaction',
+                style: TextStyle(color: Colors.white, fontSize: 13.sp),
+                textAlign: TextAlign.center,
+                maxLines: 2, // Wrap up to 2 lines
+                overflow: TextOverflow.ellipsis, // Add ellipsis if too long
+                softWrap: true,
+              ),
             ),
+
           ],
         ),
       ),
