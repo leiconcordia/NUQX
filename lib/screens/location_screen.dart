@@ -202,12 +202,7 @@ class _LocationScreenState extends State<LocationScreen> {
         return AlertDialog(
           title: const Text("Service Area Confirmation"),
           content: Text(
-            "✅ You are within the service area. You can now join the queue.\n\n"
-                "📍 User location:\n"
-                "Latitude: ${position.latitude}\n"
-                "Longitude: ${position.longitude}\n\n"
-                "📏 Distance from office: ${distanceInMeters.toStringAsFixed(2)} meters",
-          ),
+            "You are within the service area. You can now join the queue.\n"),
           actions: [
             TextButton(
               onPressed: () {
