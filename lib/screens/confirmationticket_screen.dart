@@ -276,10 +276,10 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
               //   message: "$peopleInWaiting people ahead of you.",
               // );
               //
-              // NotificationService.showLocalNotification(
-              //   "Waiting in line",
-              //   "$peopleInWaiting people ahead of you.",
-              // );
+              NotificationService.showLocalNotification(
+                "You have been queued",
+                "Please check your ticket number",
+              );
 
               // 🔹 Step 5: Navigate to tracker screen
               Navigator.pushAndRemoveUntil(
