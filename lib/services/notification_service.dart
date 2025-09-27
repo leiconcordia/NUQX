@@ -8,6 +8,8 @@ class NotificationService {
   static String? _lastQueueStatus;
  // static int? _lastPeopleInWaiting;
   static String? _lastWindowNumber;
+  static int? _lastPeopleInWaiting;
+
   static String? _lastNotificationId;
   static Timer? _timer;
   static String? _lastFetchedMongoNotifId; // For polling MongoDB
@@ -64,7 +66,7 @@ class NotificationService {
     // Listen for WebSocket notifications
     socket.on("notification", (data) {
       print("📩 naka dawat received via WebSocket: $data");
-      showLocalNotification(data['title'] ?? "Notification", data['message'] ?? "");
+      //showLocalNotification(data['title'] ?? "Notification", data['message'] ?? "");
     });
   }
 
@@ -128,7 +130,8 @@ class NotificationService {
     print("🔔 NotificationService started for $username");
 
     _timer = Timer.periodic(const Duration(seconds: 5), (timer) async {
-      await checkNotifications(username);      // Existing queue polling
+      await checkNotifications(username);
+     // Existing queue polling
      // await checkWebNotifications(username);  // for transfer notifications
     });
 
@@ -141,28 +144,35 @@ class NotificationService {
     print("🛑 NotificationService stopped.");
   }
 
-  /// Check MongoDB for queue updates
   static Future<void> checkNotifications(String username) async {
     try {
       final result = await MongoDatabase.getQueueWaitInfo(username);
       final statusResult = await MongoDatabase.getUserQueueStatus(username);
 
+      print("📡 Mongo result: $result");
+      print("📡 Mongo statusResult: $statusResult");
+
       if (result == null || statusResult == null) return;
 
       final queueStatus = statusResult['status'];
-      final peopleInWaiting = result['peopleInWaiting'];
-      final approxWaitTime = result['approxWaitTime'];
       final windowNumber = statusResult['windowNumber'];
+      final int peopleInWaiting = int.tryParse(result['peopleInWaiting'].toString()) ?? 0;
+      final approxWaitTime = result['approxWaitTime'];
 
+      print("🔹 Parsed peopleInWaiting: $peopleInWaiting");
+
+      // Skip if NOTHING has changed
       if (_lastQueueStatus == queueStatus &&
-          //_lastPeopleInWaiting == peopleInWaiting &&
-          _lastWindowNumber == windowNumber) {
-        return; // no changes
+          _lastWindowNumber == windowNumber &&
+          _lastPeopleInWaiting == peopleInWaiting) {
+        print("⏩ No changes detected. Skipping notification.");
+        return;
       }
 
+      // Update last known state
       _lastQueueStatus = queueStatus;
-      //_lastPeopleInWaiting = peopleInWaiting;
       _lastWindowNumber = windowNumber;
+      _lastPeopleInWaiting = peopleInWaiting;
 
       await _sendNotificationIfNeeded(
         username: username,
@@ -179,7 +189,6 @@ class NotificationService {
 
 
 
-  /// Determine which notification to send
   static Future<void> _sendNotificationIfNeeded({
     required String username,
     required String queueStatus,
@@ -187,49 +196,63 @@ class NotificationService {
     required String approxWaitTime,
     required String windowNumber,
   }) async {
+    print("🔹 Checking notification logic: "
+        "status=$queueStatus, waiting=$peopleInWaiting, window=$windowNumber");
+
     String? title;
     String? message;
 
     if (queueStatus == 'Processing') {
       title = "It's your turn!";
       message = "Please proceed to counter $windowNumber.";
-    } else if (peopleInWaiting == 0 && queueStatus == 'Waiting') {
-      title = "Almost your turn";
-      message = "Get ready! You are next in line.";
+    } else if (peopleInWaiting == 15) {
+      title = "Waiting in line";
+      message = "$peopleInWaiting people ahead of you.";
+    } else if (peopleInWaiting == 10) {
+      title = "Waiting in line";
+      message = "$peopleInWaiting people ahead of you.";
+    } else if (peopleInWaiting == 5) {
+      title = "Waiting in line";
+      message = "$peopleInWaiting people ahead of you.";
     } else if (peopleInWaiting == 1) {
       title = "Up next!";
       message = "You're next! Please proceed soon.";
     }
 
-    if (title != null && message != null) {
-      // Generate a unique ID for this notification
-      final notificationId = "$queueStatus|$peopleInWaiting|$windowNumber";
 
-      // Skip if already sent
-      if (_lastNotificationId == notificationId) return;
+
+    if (title != null && message != null) {
+      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000; // seconds
+      final notificationId = "$queueStatus|$peopleInWaiting|$windowNumber|$now";
+
+      print("🔹 Generated notificationId: $notificationId");
+
+      if (_lastNotificationId == notificationId) {
+        print("⏩ Skipping duplicate notification: $notificationId");
+        return;
+      }
 
       _lastNotificationId = notificationId;
-      // Push to MongoDB
+
+      print("📢 Sending notification -> $title: $message");
+
       await MongoDatabase.pushNotification(user: username, title: title, message: message);
 
-      // Emit via WebSocket
-      final notification = {
+      await showLocalNotification(title, message);
+
+      final socket = SocketService();
+      socket.emitWhenConnected("notification", {
         "title": title,
         "message": message,
         "queueNumber": windowNumber,
         "user": username,
         "readAt": null,
         "date": DateTime.now().toIso8601String(),
-      };
-      final socket = SocketService();
-      socket.emitWhenConnected("notification", notification);
+      });
 
 
-      print("✅ Notification na emit: $title - $message");
-      // Show local notification immediately
-     //await showLocalNotification(title, message);
-
-
+    } else {
+      print("⚠️ No matching condition found. No notification will be sent.");
     }
   }
 

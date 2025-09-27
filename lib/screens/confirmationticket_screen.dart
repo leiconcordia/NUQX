@@ -34,6 +34,7 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
   Map<String, dynamic>? user;
   int peopleInWaiting = 0;
   String approxWaitTime = "0 min";
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -173,115 +174,132 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
+        // 🔹 Back Button
         TextButton(
-          onPressed: () {
+          onPressed: _isSubmitting
+              ? null // Disable while submitting
+              : () {
             Navigator.pop(context);
           },
           child: Text(
             "Back",
-            style: TextStyle(fontSize: 16.sp, color: Color(0xFF2D3A8C)),
+            style: TextStyle(fontSize: 16.sp, color: const Color(0xFF2D3A8C)),
           ),
         ),
         SizedBox(width: 10.w),
+
+        // 🔹 Submit Button
         ElevatedButton(
-          onPressed: () async {
-            final hasActive = await MongoDatabase.hasActiveQueue(
-              widget.userName,
-            );
+          onPressed: _isSubmitting
+              ? null // 🔹 Disable button when submitting
+              : () async {
+            setState(() {
+              _isSubmitting = true; // ✅ Lock the button immediately
+            });
 
-            if (hasActive) {
-              showDialog(
-                context: context,
-                builder:
-                    (context) => AlertDialog(
-                      title: Text("Queue Already Exists"),
-                      content: Text(
-                        "You already have an ongoing queue. Please wait until it is completed before queuing again.",
-                      ),
-                      actions: [
-                        TextButton(
-                          child: Text("OK"),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ],
+            try {
+              // 🔹 Step 1: Check if user already has an active queue
+              final hasActive = await MongoDatabase.hasActiveQueue(widget.userName);
+
+              if (hasActive) {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text("Queue Already Exists"),
+                    content: const Text(
+                      "You already have an ongoing queue. Please wait until it is completed before queuing again.",
                     ),
-              );
-              return;
-            }
+                    actions: [
+                      TextButton(
+                        child: const Text("OK"),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                );
 
-            // Instead of generating + inserting separately, use the atomic method
-            final queueData = {
-              'studentID': user?['studentID'] ?? 'N/A',
-              'user': widget.userName,
-              'studentName':
-                  (user?['firstName'] ?? '') +
-                  ' ' +
-                  (user?['lastName'] ?? 'User'),
-              'program': user?['program'] ?? 'N/A',
-              'yearLevel': user?['yearLevel'] ?? 'N/A',
-              'transactionName': widget.transactionConcern,
-              'transactionID': widget.transactionID,
-              'isPriority': false,
-              'status': 'Waiting',
-              'departmentAdmin': widget.TransactionAdmin,
-              'windowNumber': '',
-              'createdAt': DateTime.now().toUtc(),
-              'updatedAt': '',
-              'dateEnded': '',
-              'department': widget.department,
-            };
+                setState(() {
+                  _isSubmitting = false; // Re-enable if no queue created
+                });
+                return;
+              }
 
-            // 🔑 Generate queue number + insert atomically
-            final result = await MongoDatabase.generateAndInsertQueueNumber(
-              widget.transactionID,
-              widget.transactionConcern,
-              queueData,
-            );
-
-            if (result != null) {
-              // result will return full inserted document with _id
-              final insertedDoc = result;
-
-              // Emit socket event only AFTER transaction succeeds
-              SocketService().emitWhenConnected('queueChanged', {
-                'action': 'create',
+              // 🔹 Step 2: Prepare queue data
+              final queueData = {
+                'studentID': user?['studentID'] ?? 'N/A',
+                'user': widget.userName,
+                'studentName':
+                (user?['firstName'] ?? '') + ' ' + (user?['lastName'] ?? 'User'),
+                'program': user?['program'] ?? 'N/A',
+                'yearLevel': user?['yearLevel'] ?? 'N/A',
+                'transactionName': widget.transactionConcern,
+                'transactionID': widget.transactionID,
+                'isPriority': false,
+                'status': 'Waiting',
+                'departmentAdmin': widget.TransactionAdmin,
+                'windowNumber': '',
+                'createdAt': DateTime.now().toUtc(),
+                'updatedAt': '',
+                'dateEnded': '',
                 'department': widget.department,
-                'data': {
-                  ...insertedDoc,
-                  '_id':
-                      insertedDoc['_id']
-                          .toHexString(), // ensure _id is plain string
-                  'createdAt': insertedDoc['createdAt'].toIso8601String(),
-                },
+              };
+
+              // 🔹 Step 3: Generate queue number & insert atomically
+              final result = await MongoDatabase.generateAndInsertQueueNumber(
+                widget.transactionID,
+                widget.transactionConcern,
+                queueData,
+              );
+
+              if (result != null) {
+                final insertedDoc = result;
+
+                // Emit socket event after DB insertion
+                SocketService().emitWhenConnected('queueChanged', {
+                  'action': 'create',
+                  'department': widget.department,
+                  'data': {
+                    ...insertedDoc,
+                    '_id': insertedDoc['_id'].toHexString(),
+                    'createdAt': insertedDoc['createdAt'].toIso8601String(),
+                  },
+                });
+              }
+
+              print("✅ Queue generated, inserted, and broadcast successfully!");
+              await loadWaitInfo();
+
+              // // 🔹 Step 4: Notify user
+              // await MongoDatabase.pushNotification(
+              //   user: widget.userName,
+              //   title: "$approxWaitTime wait time",
+              //   message: "$peopleInWaiting people ahead of you.",
+              // );
+              //
+              // NotificationService.showLocalNotification(
+              //   "Waiting in line",
+              //   "$peopleInWaiting people ahead of you.",
+              // );
+
+              // 🔹 Step 5: Navigate to tracker screen
+              Navigator.pushAndRemoveUntil(
+                context,
+                noAnimationRoute(
+                  MainScaffold(
+                    userName: widget.userName,
+                    initialTabIndex: 1, // Tracker tab
+                  ),
+                ),
+                    (route) => false,
+              );
+
+              await resetConfirmationFlag();
+            } catch (e) {
+              print("❌ Error during submission: $e");
+              setState(() {
+                _isSubmitting = false; // Re-enable on error
               });
             }
-
-            print("✅ Queue generated, inserted, and broadcast successfully!");
-            await loadWaitInfo();
-
-            await MongoDatabase.pushNotification(
-              user: widget.userName,
-              title: "$approxWaitTime wait time",
-              message: "$peopleInWaiting people ahead of you.",
-            );
-            NotificationService.showLocalNotification(
-              "$approxWaitTime wait time",
-              "$peopleInWaiting people ahead of you.",
-            );
-
-            // Navigate after success
-            Navigator.pushAndRemoveUntil(
-              context,
-              noAnimationRoute(
-                MainScaffold(
-                  userName: widget.userName,
-                  initialTabIndex: 1, // Tracker tab
-                ),
-              ),
-              (route) => false,
-            );
-
-            await resetConfirmationFlag();
           },
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(
@@ -290,7 +308,16 @@ class _ConfirmationTicketScreen extends State<ConfirmationTicketScreen> {
             backgroundColor: Colors.blue.shade900,
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
           ),
-          child: Text(
+          child: _isSubmitting
+              ? SizedBox(
+            height: 20.h,
+            width: 20.h,
+            child: const CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
+            ),
+          )
+              : Text(
             "Submit",
             style: TextStyle(color: Colors.white, fontSize: 16.sp),
           ),
